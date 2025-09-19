@@ -1,12 +1,31 @@
 const User = require("../models/user");
+const moment = require("moment");
+const claveSecreta = process.env.JWT_SECRET || "mi_secreto_super_seguro";
 const bcrypt = require("bcryptjs"); 
-const jwt = require("jsonwebtoken");
+const jwt = require("jwt-simple");
 
 
-// Ruta de prueba
-const pruebaUser = (req, res) => {
-  return res.status(200).json({ message: "Ruta de prueba funcionando ✅" });
+
+// Ruta de prueba que devuelve datos del usuario autenticado
+const pruebaUser = async (req, res) => {
+  try {
+    // El middleware auth ya decodificó el token y puso los datos en req.user
+    const userId = req.user.id;
+
+    const user = await User.findById(userId).select("-password"); // quitamos password por seguridad
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    return res.status(200).json({
+      message: "✅ Usuario autenticado",
+      user
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error en prueba usuario", error: error.message });
+  }
 };
+
 
 // Registrar usuario
 const registerUser = async (req, res) => {
@@ -54,7 +73,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Login de usuario
+// Login de usuario con jwt-simple
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -73,13 +92,16 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Contraseña incorrecta" });
     }
 
-    // Generar token real
-    const token = jwt.sign(
-  { id: user._id, email: user.email }, 
-  process.env.JWT_SECRET || "mi_secreto_super_seguro", 
-  { expiresIn: "2h" }
-);
+    // Crear payload manual
+    const payload = {
+      id: user._id,
+      email: user.email,
+      iat: moment().unix(),             // fecha de emisión
+      exp: moment().add(2, "hours").unix() // expiración en 2h
+    };
 
+    // Generar token con jwt-simple
+    const token = jwt.encode(payload, claveSecreta);
 
     return res.status(200).json({
       message: "✅ Inicio de sesión exitoso",
@@ -93,10 +115,9 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: "Error al iniciar sesión", error });
+    return res.status(500).json({ message: "Error al iniciar sesión", error: error.message });
   }
 };
-
 // Obtener usuario por ID
 const getUser = async (req, res) => {
   try {
@@ -127,5 +148,4 @@ module.exports = {
   registerUser,
   loginUser,
   getUser,
-
 };

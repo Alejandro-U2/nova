@@ -1,14 +1,13 @@
-//Importar modulos
+// Importar módulos
 const jwt = require("jwt-simple");
 const moment = require("moment");
 
-//Importar clave secreta
-const libjwt = require("../services/jwt");
-const claveSecreta = libjwt.claveSecreta;
+// Clave secreta desde .env (o fallback)
+const claveSecreta = process.env.JWT_SECRET || "mi_secreto_super_seguro";
 
-//Middleware de autenticación
+// Middleware de autenticación
 exports.auth = (req, res, next) => {
-    //Comprobatar si me llega la cabecera de auth
+    // Comprobar si existe cabecera de auth
     if (!req.headers.authorization) {
         return res.status(403).send({
             status: "error",
@@ -16,29 +15,29 @@ exports.auth = (req, res, next) => {
         });
     }
 
-    //Decodificar el token
-    let token = req.headers.authorization.replace(/['"]+/g, '');
+    // Limpiar token (quitar 'Bearer ' si existe)
+    let token = req.headers.authorization.replace("Bearer ", "").replace(/['"]+/g, "");
+
     try {
         let payload = jwt.decode(token, claveSecreta);
 
-        //Comprobar expiracion del token
+        // Comprobar expiración
         if (payload.exp <= moment().unix()) {
             return res.status(401).send({
                 status: "error",
-                message: "token expirado"
+                message: "Token expirado"
             });
         }
-        //Agregar datos de usuario a la request
+
+        // Agregar datos del usuario a la request
         req.user = payload;
+        next();
+
     } catch (error) {
-        return res.status(404).send({
+        return res.status(401).send({
             status: "error",
-            message: "token invalido",
+            message: "Token inválido",
             error: error.message
         });
     }
-
-
-    //Pasar a ejecución de acción
-    next();
-}
+};
