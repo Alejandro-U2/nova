@@ -1,4 +1,3 @@
-// src/services/api.js
 import axios from "axios";
 
 // Crear una instancia de Axios con configuración base

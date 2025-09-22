@@ -1,0 +1,129 @@
+{
+  "info": {
+    "name": "Nova API",
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "description": "Colección para probar la API backend de Nova (MongoDB 'nova').",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Usuario",
+      "item": [
+        {
+          "name": "POST Usuario / Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Daniel\",\n  \"lastname\": \"Figueroa\",\n  \"nickname\": \"josuwusus\",\n  \"email\": \"jfigueroa@nova.com\",\n  \"password\": \"mariobros25\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users/register", "host": ["{{baseUrl}}"], "path": ["api","users","register"] }
+          },
+          "response": [],
+          "description": "Registra un usuario. Campos obligatorios: name, lastname, nickname, email, password"
+        },
+        {
+          "name": "POST Usuario / Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"jfigueroa@nova.com\",\n  \"password\": \"mariobros25\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/users/login", "host": ["{{baseUrl}}"], "path": ["api","users","login"] }
+          },
+          "response": [],
+          "description": "Login: devuelve token JWT en la respuesta si las credenciales son correctas. Copia el token a la variable {{token}}"
+        },
+        {
+          "name": "GET Usuario / Obtener por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","users","{{userId}}"] }
+          },
+          "response": [],
+          "description": "Obtener usuario por id. Reemplaza {{userId}} por el _id devuelto al registrar o en la respuesta de login/user"
+        },
+        {
+          "name": "GET Usuario / Listar (NO IMPLEMENTADO)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] }
+          },
+          "response": [],
+          "description": "Endpoint sugerido para listar usuarios. Actualmente no está implementado en rutas. Ruta propuesta: GET /api/users"
+        },
+        {
+          "name": "PUT Usuario / Actualizar (protegido) (PLANTILLA)",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Nuevo\",\n  \"lastname\": \"Apellido\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","users","{{userId}}"] }
+          },
+          "response": [],
+          "description": "Plantilla para actualizar usuario. Endpoint protegido esperado: PUT /api/users/:id (requiere Authorization header) — actualmente no implementado en rutas"
+        },
+        {
+          "name": "DEL Usuario / Eliminar (protegido) (PLANTILLA)",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","users","{{userId}}"] }
+          },
+          "response": [],
+          "description": "Plantilla para eliminar usuario. Endpoint protegido esperado: DELETE /api/users/:id — actualmente no implementado en rutas"
+        },
+        {
+          "name": "GET Usuario / Prueba (protegida)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/users/prueba-usuario", "host": ["{{baseUrl}}"], "path": ["api","users","prueba-usuario"] }
+          },
+          "response": [],
+          "description": "Ruta de prueba que requiere token (auth middleware)"
+        }
+      ]
+    },
+    {
+      "name": "Publicaciones",
+      "item": [
+        {
+          "name": "GET Publication / Prueba",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/publication/prueba-publication", "host": ["{{baseUrl}}"], "path": ["api","publication","prueba-publication"] } },
+          "response": [],
+          "description": "Ruta de prueba para publicaciones"
+        }
+      ]
+    },
+    {
+      "name": "Follow",
+      "item": [
+        {
+          "name": "GET Follow / Prueba",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/follow/prueba-follow", "host": ["{{baseUrl}}"], "path": ["api","follow","prueba-follow"] } },
+          "response": [],
+          "description": "Ruta de prueba para follow"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    }
+  ]
+}
