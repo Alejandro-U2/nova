@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import '../styles/login.css';
+import Loader from "../components/Loader";   // ⬅️ Import del nuevo componente
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,35 +14,30 @@ export default function Login() {
   const CROSSFADE_MS = 420;
   const location = useLocation();
   const forcedSkip = !!(location && location.state && location.state.skipLoader);
-  // sessionStorage flag to show loader only once per browser session
   const loaderShown = typeof window !== 'undefined' && sessionStorage.getItem('nova_loader_shown') === '1';
-  // Detect navigation type: on a fresh page load (type 'navigate') we want the loader to show
+
   let navType = 'navigate';
   try {
     const entries = (typeof performance !== 'undefined' && performance.getEntriesByType) ? performance.getEntriesByType('navigation') : null;
     if (entries && entries[0] && entries[0].type) navType = entries[0].type;
     else if (typeof window !== 'undefined' && window.performance && window.performance.navigation) {
-      // fallback: 0 = navigate, 1 = reload, 2 = back_forward
       navType = window.performance.navigation.type === 1 ? 'reload' : 'navigate';
     }
   } catch { /* ignore */ }
-  // Allow forcing the loader via URL param for testing (e.g. ?forceLoader=1)
+
   let forceLoaderParam = false;
   try {
     const qp = (typeof window !== 'undefined' && window.location && window.location.search) ? new URLSearchParams(window.location.search) : null;
     forceLoaderParam = qp ? (qp.get('forceLoader') === '1' || qp.get('loader') === '1') : false;
   } catch { /* ignore */ }
 
-  // Skip loader only if forcedSkip OR loader was shown this session AND this is NOT a fresh navigate load, unless forceLoaderParam is true
   const shouldSkipLoader = forcedSkip || (loaderShown && navType !== 'navigate' && !forceLoaderParam);
-  // If shouldSkipLoader is true, start with loader hidden and content visible
+
   const [loaderVisible, setLoaderVisible] = useState(!shouldSkipLoader);
   const [contentVisible, setContentVisible] = useState(shouldSkipLoader);
   const [removeLoader, setRemoveLoader] = useState(shouldSkipLoader);
-  // show a transition loader when logging in successfully
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
 
-  // --- Social & Captcha configuration (from environment) ---
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
   const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID || '';
   const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
@@ -60,7 +56,6 @@ export default function Login() {
     document.head.appendChild(s);
   });
 
-  // Initialize social SDKs and reCAPTCHA if keys present
   useEffect(() => {
     let mounted = true;
     if (GOOGLE_CLIENT_ID) {
@@ -103,10 +98,7 @@ export default function Login() {
     return () => { mounted = false; };
   }, []); // eslint-disable-line
 
-  // Google credential callback
   const handleGoogleCredential = async (response) => {
-    // response.credential is a JWT token containing Google user info
-    // Send to backend for verification / sign-in or create
     if (!response || !response.credential) return;
     try {
       const res = await fetch('/api/auth/google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: response.credential }) });
@@ -134,8 +126,7 @@ export default function Login() {
       setAlert({ show: true, type: 'error', text: 'Google login no está configurado' });
       return;
     }
-    // Use the One Tap / prompt flow
-  try { window.google.accounts.id.prompt(); } catch { setAlert({ show: true, type: 'error', text: 'No se pudo iniciar Google Sign-In' }); }
+    try { window.google.accounts.id.prompt(); } catch { setAlert({ show: true, type: 'error', text: 'No se pudo iniciar Google Sign-In' }); }
   };
 
   const handleFacebookLogin = () => {
@@ -146,7 +137,6 @@ export default function Login() {
     window.FB.login(function(response) {
       if (response.authResponse) {
         const accessToken = response.authResponse.accessToken;
-        // send token to backend for verification/exchange
         (async () => {
           try {
             const res = await fetch('/api/auth/facebook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accessToken }) });
@@ -169,7 +159,7 @@ export default function Login() {
   };
 
   const verifyRecaptcha = () => {
-    if (!RECAPTCHA_SITE_KEY) return true; // no captcha configured -> pass
+    if (!RECAPTCHA_SITE_KEY) return true;
     try {
       if (!window.grecaptcha || recaptchaWidgetId === null) return false;
       const resp = window.grecaptcha.getResponse(recaptchaWidgetId);
@@ -177,17 +167,13 @@ export default function Login() {
     } catch { return false; }
   };
 
-  // form UI state
   const [errors, setErrors] = useState({ email: '', password: '' });
   const [alert, setAlert] = useState({ show: false, type: 'error', text: '' });
   const [remember, setRemember] = useState(false);
 
-  // clear-on-focus behavior: DO NOT remove existing text on focus; just hide placeholder and optionally select
   const handleClearOnFocus = (setter, placeholder) => (e) => {
-    // keep the setter argument for compatibility with call sites
     void setter;
     try {
-      // store original placeholder and clear it
       e.target.dataset.ph = placeholder || e.target.placeholder || '';
       e.target.placeholder = '';
       if (typeof e.target.select === 'function') e.target.select();
@@ -199,7 +185,6 @@ export default function Login() {
   };
 
   useEffect(() => {
-    // load remembered credentials (email/nickname) if present
     try {
       const raw = localStorage.getItem('nova_remember');
       if (raw) {
@@ -209,12 +194,10 @@ export default function Login() {
           setRemember(true);
         }
       }
-    } catch {
-      // ignore parse errors
-    }
+    } catch { /* ignore */ }
+
     const el = gradientRef.current;
     if (!el) return;
-    // Smooth gradient interpolation using requestAnimationFrame
     const palettes = [
       ['62,35,255', '60,255,60'],
       ['255,35,98', '45,175,230'],
@@ -225,7 +208,7 @@ export default function Login() {
     let idx = 0;
     let animationId = null;
     let start = null;
-    const DURATION = 3200; // ms for each transition
+    const DURATION = 3200;
 
     const parse = (s) => s.split(',').map(Number);
     const lerp = (a, b, t) => a + (b - a) * t;
@@ -245,16 +228,15 @@ export default function Login() {
       const g1 = Math.round(lerp(fromA[1], toA[1], t));
       const b1 = Math.round(lerp(fromA[2], toA[2], t));
 
-      const r2 = Math.round(lerp(fromB[0], toB[0], t));
-      const g2 = Math.round(lerp(fromB[1], toB[1], t));
-      const b2 = Math.round(lerp(fromB[2], toB[2], t));
+      const r2 = Math.round(lerp(fromB[0], toA[0], t));
+      const g2 = Math.round(lerp(fromB[1], toA[1], t));
+      const b2 = Math.round(lerp(fromB[2], toA[2], t));
 
       el.style.backgroundImage = `linear-gradient(45deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
 
       if (t < 1) {
         animationId = requestAnimationFrame(step);
       } else {
-        // move to next
         idx = (idx + 1) % palettes.length;
         start = null;
         animationId = requestAnimationFrame(step);
@@ -266,7 +248,6 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    // If navigation requested to skip the loader or the loader was already shown this session, do nothing — states were initialized above
     if (shouldSkipLoader) return;
     let mounted = true;
     const wait = new Promise((r) => setTimeout(r, LOADER_MS));
@@ -275,7 +256,6 @@ export default function Login() {
     Promise.all([wait, imgLoad]).then(() => {
       if (!mounted) return;
       setContentVisible(true);
-      // mark that loader was shown for this session so it won't reappear on simple navigations
       try { sessionStorage.setItem('nova_loader_shown', '1'); } catch { /* ignore */ }
       setTimeout(() => setLoaderVisible(false), 40);
       setTimeout(() => setRemoveLoader(true), CROSSFADE_MS + 80);
@@ -290,10 +270,8 @@ export default function Login() {
       e.email = 'El correo o nickname es requerido';
     } else {
       if (val.indexOf('@') >= 0) {
-        // treat as email
         if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(val)) e.email = 'Email inválido';
       } else {
-        // treat as nickname: allow letters, numbers, underscore, dot and hyphen, min 3 chars
         if (!/^[\w.-]{3,}$/i.test(val)) e.email = 'Nickname inválido (mín. 3 caracteres)';
       }
     }
@@ -314,7 +292,6 @@ export default function Login() {
       const data = await res.json();
       if (res.ok) {
         setAlert({ show: true, type: 'success', text: 'Inicio de sesión exitoso' });
-        // Save auth and show a transition loader while entering the system
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         try { sessionStorage.setItem('nova_loader_shown', '1'); } catch { /* ignore */ }
@@ -335,24 +312,22 @@ export default function Login() {
 
   return (
     <>
-      {showTransitionLoader && (
-        <div className="loader-screen visible" style={{ position: 'fixed', inset: 0, zIndex: 1200 }}>
-          <div className="loader-content">
-            <img src="/gif/snoopu.gif" alt="loading" className="loader-gif" />
-            <h2 className="loader-text">Ingresando <span>al sistema</span></h2>
-          </div>
-        </div>
-      )}
-      {!removeLoader && (
-        <div className={`loader-screen ${loaderVisible ? 'visible' : 'hidden'}`}>
-          <div className="loader-content">
-            <img src="/gif/snoopu.gif" alt="loading" className="loader-gif" />
-            <h2 className="loader-text">Espere un <span>momento</span></h2>
-          </div>
-        </div>
-      )}
+      {/* Loader al loguear */}
+      <Loader 
+        show={showTransitionLoader} 
+        text="Ingresando al sistema" 
+        fixed 
+        image="/img/nova.png" 
+      />
 
-  <div className={`main-wrap ${contentVisible ? 'visible' : ''} login-page`}>
+      {/* Loader inicial */}
+      <Loader 
+        show={!removeLoader && loaderVisible} 
+        text="Espere un momento" 
+        image="/img/nova.png" 
+      />
+
+      <div className={`main-wrap ${contentVisible ? 'visible' : ''} login-page`}>
         <div id="gradient" ref={gradientRef} className="fade-in">
           <div className="wrapper">
             <div className="container">
@@ -385,13 +360,11 @@ export default function Login() {
                     <input type={showPassword ? 'text' : 'password'} placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" onFocus={handleClearOnFocus(setPassword, 'Contraseña')} onBlur={handleRestorePlaceholder('Contraseña')} />
                     <button type="button" className="password-toggle" onClick={() => setShowPassword((s) => !s)} aria-pressed={showPassword} aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }}>
                       {showPassword ? (
-                        // eye open SVG
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                           <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                           <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       ) : (
-                        // eye closed SVG
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                           <path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a21.78 21.78 0 015.06-5.94" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M1 1l22 22" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -403,7 +376,6 @@ export default function Login() {
 
                   <div style={{ height: 10 }} />
 
-                  {/* Remember + social buttons block (migrated from provided HTML) */}
                   <div className="remember">
                     <label className="remember-label"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Recuérdame</label>
                     <a href="#">Olvidaste la contraseña</a>
