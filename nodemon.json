@@ -1,0 +1,16 @@
+{
+  "watch": ["backend"],
+  "ext": "js,json",
+  "ignore": [
+    "frontend/**",
+    "node_modules/**",
+    "dist/**",
+    ".git/**",
+    "**/*.log",
+    "**/*.md",
+  "**/.vscode/**",
+  "**/.idea/**"
+  ],
+  "delay": "250",
+  "legacyWatch": false
+}

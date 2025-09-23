@@ -1,11 +1,35 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+const js = require('@eslint/js');
+const globals = require('globals');
+const reactHooks = require('eslint-plugin-react-hooks');
+const reactRefresh = require('eslint-plugin-react-refresh');
+/* eslint-env node */
+const { defineConfig } = require('eslint/config');
 
-export default defineConfig([
-  globalIgnores(['dist']),
+module.exports = defineConfig([
+  {
+    ignores: ['**/dist/**', 'node_modules'],
+  },
+  // Configuración específica para el backend (CommonJS / Node)
+  {
+    files: ['backend/**'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.node,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'script',
+      },
+    },
+    rules: {},
+  },
+  // Ensure the config file itself is linted with Node globals
+  {
+    files: ['eslint.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {},
+  },
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -26,4 +50,4 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
-])
+]);

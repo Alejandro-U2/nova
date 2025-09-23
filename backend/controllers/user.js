@@ -82,7 +82,7 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Correo y contraseña son obligatorios" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ $or: [{ email }, { nickname: email }] });
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }

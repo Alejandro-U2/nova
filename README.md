@@ -1,4 +1,3 @@
-# Nova
 
 ## Descripción
 Nova es una aplicación web que combina un frontend desarrollado con React y Vite, y un backend construido con Express y MongoDB. La aplicación permite a los usuarios registrarse, iniciar sesión y explorar funcionalidades relacionadas con bienes raíces en un espacio virtual.
