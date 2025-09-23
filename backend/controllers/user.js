@@ -143,9 +143,72 @@ const getUser = async (req, res) => {
   }
 };
 
+// Buscar usuarios
+const searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query; // término de búsqueda
+    console.log("🔍 Búsqueda solicitada con término:", q);
+
+    if (!q || q.trim() === '') {
+      return res.status(400).json({ message: "Término de búsqueda requerido" });
+    }
+
+    // Primero verificar cuántos usuarios hay en total
+    const totalUsers = await User.countDocuments();
+    console.log("📊 Total de usuarios en la base de datos:", totalUsers);
+
+    // Buscar usuarios por nombre, apellido, nickname o email
+    const users = await User.find({
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { lastname: { $regex: q, $options: 'i' } },
+        { nickname: { $regex: q, $options: 'i' } },
+        { email: { $regex: q, $options: 'i' } }
+      ]
+    }).select("-password").limit(20); // Limitamos a 20 resultados y excluimos password
+
+    console.log("✅ Usuarios encontrados:", users.length);
+
+    return res.status(200).json({
+      message: "Búsqueda completada",
+      users,
+      count: users.length,
+      totalUsers
+    });
+  } catch (error) {
+    console.error("❌ Error en búsqueda:", error);
+    return res.status(500).json({ 
+      message: "Error al buscar usuarios", 
+      error: error.message 
+    });
+  }
+};
+
+// Obtener todos los usuarios (para debug)
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password").limit(10);
+    console.log("📋 Usuarios en la base de datos:", users.length);
+    
+    return res.status(200).json({
+      message: "Usuarios obtenidos",
+      users,
+      count: users.length
+    });
+  } catch (error) {
+    console.error("❌ Error obteniendo usuarios:", error);
+    return res.status(500).json({ 
+      message: "Error al obtener usuarios", 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   pruebaUser,
   registerUser,
   loginUser,
   getUser,
+  searchUsers,
+  getAllUsers,
 };

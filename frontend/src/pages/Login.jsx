@@ -112,7 +112,7 @@ export default function Login() {
           else localStorage.removeItem('nova_remember');
         } catch { /* ignore */ }
         setShowTransitionLoader(true);
-        setTimeout(() => navigate('/inicio'), 700);
+        setTimeout(() => navigate('/home'), 700);
       } else {
         setAlert({ show: true, type: 'error', text: data.message || 'Error en inicio con Google' });
       }
@@ -146,7 +146,7 @@ export default function Login() {
               localStorage.setItem('user', JSON.stringify(data.user));
               try { sessionStorage.setItem('nova_loader_shown', '1'); } catch { /* ignore */ }
               setShowTransitionLoader(true);
-              setTimeout(() => navigate('/inicio'), 700);
+              setTimeout(() => navigate('/home'), 700);
             } else {
               setAlert({ show: true, type: 'error', text: data.message || 'Error en inicio con Facebook' });
             }
@@ -300,7 +300,7 @@ export default function Login() {
           else localStorage.removeItem('nova_remember');
         } catch { /* ignore */ }
         setShowTransitionLoader(true);
-        setTimeout(() => navigate('/inicio'), 700);
+        setTimeout(() => navigate('/home'), 700);
       } else {
         setAlert({ show: true, type: 'error', text: data.message || 'Credenciales inválidas' });
       }
