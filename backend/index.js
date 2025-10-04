@@ -9,10 +9,10 @@ require("dotenv").config({ path: path.join(__dirname, '.env') });
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/users", require("./rutas/user"));
 
 // ----------Rutas
 app.use("/api/users", require("./rutas/user"));
+app.use("/api/profile", require("./rutas/profile"));
 
 const startServer = async () => {
   try {

@@ -1,28 +1,44 @@
 import { Link } from "react-router-dom";
-import "./Navbar.css"; // Corrected import path
+import "./Navbar.css"; // lo estilizamos aparte
 
 export default function Navbar() {
+  const handleLogout = () => {
+    // Limpiar el localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirigir al login o página principal
+    window.location.href = '/login'; // o usa useNavigate si tienes React Router
+    
+    console.log('Sesión cerrada exitosamente');
+  };
+
   return (
     <div className="navbar">
       <h2 className="logo">Nova</h2>
       <ul>
         <li>
-          <Link to="/inicio">Inicio</Link>
+          <Link to="/Home">Inicio</Link>
         </li>
         <li>
-          <Link to="/buscar">Buscar</Link>
+          <Link to="/Search">Buscar</Link>
         </li>
         <li>
-          <Link to="/explore">Explore</Link>
+          <Link to="/Explore">Explore</Link>
         </li>
         <li>
-          <Link to="/notificaciones">Notificaciones</Link>
+          <Link to="/Notificaciones">Notificaciones</Link>
         </li>
         <li>
-          <Link to="/crear">Crear</Link>
+          <Link to="/Crear">Crear</Link>
         </li>
         <li>
-          <Link to="/perfil">Perfil</Link>
+          <Link to="/Profile">Perfil</Link>
+        </li>
+        <li>
+          <button className="logout-btn" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
         </li>
       </ul>
     </div>

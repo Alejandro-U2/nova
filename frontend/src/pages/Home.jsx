@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import '../styles/home.css';
+import './Home.css'; // Importando estilos minimalistas
 
 export default function Home() {
   const [user, setUser] = useState(null);
