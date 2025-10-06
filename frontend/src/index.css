@@ -23,6 +23,15 @@ html, body {
 #root {
   width: 100%;
   min-height: 100vh;
+  display: block; /* Anular cualquier display flex de Tailwind */
+  position: relative;
+}
+
+/* Contenedor de la aplicación */
+.app {
+  min-height: 100vh;
+  position: relative;
+  display: block;
 }
 
 /* Existing custom rules preserved below */
@@ -49,8 +58,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }

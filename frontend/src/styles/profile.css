@@ -1,12 +1,44 @@
 /* =============================
-   Profile.css - Estilo Facebook Blanco
+   Profile.css - Estilo con paleta Plum Noir
    ============================= */
+
+/* Variables de la paleta Plum Noir */
+:root {
+  --primary: #2D0A43;          /* Plum Noir - dark shade */
+  --primary-dark: #1a0627;     /* Plum Noir más oscuro */
+  --secondary: #6D3A8E;        /* Lavender Smoke - medium shade */
+  --accent: #FFA719;           /* Honey Drizzle - medium shade */
+  --warning: #FFCD7B;          /* Butterlight - light shade */
+  
+  --text-primary: #2D0A43;     /* Plum Noir para texto principal */
+  --text-secondary: #6D3A8E;   /* Lavender Smoke para texto secundario */
+  --text-muted: #a0aec0;       /* Gris claro mantener */
+  
+  --bg-primary: #FFFADA;       /* Buttercream - light shade */
+  --bg-secondary: #f7fafc;     /* Gris muy claro mantener */
+  --bg-glass: rgba(255, 250, 218, 0.95); /* Buttercream con transparencia */
+  
+  --gradient-primary: linear-gradient(135deg, #2D0A43 0%, #6D3A8E 100%);
+  --gradient-secondary: linear-gradient(135deg, #6D3A8E 0%, #FFA719 100%);
+  --gradient-accent: linear-gradient(135deg, #FFA719 0%, #FFCD7B 100%);
+  
+  --shadow-sm: 0 2px 4px rgba(45, 10, 67, 0.1);
+  --shadow-md: 0 4px 6px rgba(45, 10, 67, 0.1);
+  --shadow-lg: 0 10px 25px rgba(45, 10, 67, 0.15);
+  --shadow-xl: 0 20px 40px rgba(45, 10, 67, 0.2);
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: all 0.3s ease;
+}
 
 /* Contenedor general */
 .profile-container {
-  margin-left: 220px;
+  padding-top: 80px;
   min-height: 100vh;
-  background-color: #ffffff;
+  background: var(--bg-primary);
 }
 
 .loading {
@@ -14,7 +46,7 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -22,9 +54,11 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid rgba(109, 58, 142, 0.2);
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* =============================
@@ -34,8 +68,8 @@
   position: relative;
   width: 100%;
   height: 280px;
-  background: #f0f0f0;
-  border-radius: 6px 6px 0 0;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   overflow: hidden;
 }
 
@@ -43,25 +77,29 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border: 5px solid #fff; /* Bordes blancos */
-  border-radius: 8px; /* Bordes redondeados */
+  border: 5px solid var(--bg-primary);
+  border-radius: var(--radius-sm);
 }
 
 .add-cover-btn {
   position: absolute;
   right: 20px;
   bottom: 20px;
-  background-color: #7a7a73;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  background: var(--gradient-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
   padding: 6px 12px;
   font-size: 0.9rem;
+  color: white;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--transition);
+  font-weight: 600;
 }
 
 .add-cover-btn:hover {
-  background-color: #57564f;
+  background: var(--gradient-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* =============================
@@ -79,8 +117,8 @@
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  border: 4px solid #fff;
-  background: #ccc;
+  border: 4px solid var(--bg-primary);
+  background: var(--gradient-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,6 +126,7 @@
   font-weight: bold;
   color: #fff;
   overflow: hidden;
+  box-shadow: var(--shadow-lg);
 }
 
 .profile-avatar-img {
@@ -121,21 +160,27 @@
   font-size: 1.8rem;
   font-weight: bold;
   margin: 0;
-  color: #111827;
+  color: var(--text-primary);
+}
+
+.user-nickname {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 2px 0 4px 0;
+  font-weight: 400;
 }
 
 .user-email {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   margin: 4px 0;
 }
 
 .user-bio {
-  color: #374151;
+  color: var(--text-primary);
   font-size: 1rem;
   margin: 6px 0 0;
 }
-
 /* =============================
    Acciones del perfil
    ============================= */
@@ -152,31 +197,38 @@
 }
 
 .primary-btn {
-  background: #7a7a73;
+  background: var(--gradient-primary);
   color: white;
   border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .primary-btn:hover {
-  background: #57564f;
+  background: var(--gradient-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .secondary-btn {
-  background: #e4e6eb;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
+  background: rgba(109, 58, 142, 0.1);
+  border: 1px solid rgba(109, 58, 142, 0.2);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 500;
-  color: #050505;
+  color: var(--text-primary);
+  transition: var(--transition);
 }
 
 .secondary-btn:hover {
-  background: #d8dadf;
+  background: rgba(109, 58, 142, 0.15);
+  border-color: var(--secondary);
+  transform: translateY(-1px);
 }
 
 /* =============================
@@ -186,8 +238,8 @@
   display: flex;
   gap: 2rem;
   padding: 1rem 0;
-  border-top: 1px solid #f3f4f6;
-  border-bottom: 1px solid #f3f4f6;
+  border-top: 1px solid rgba(109, 58, 142, 0.2);
+  border-bottom: 1px solid rgba(109, 58, 142, 0.2);
 }
 
 .stat-item {
@@ -199,51 +251,123 @@
 .stat-number {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-top: 0.125rem;
 }
 
 /* =============================
-   Actividad reciente
+   Publicaciones
    ============================= */
-.recent-activity {
+.user-publications {
   padding-top: 1rem;
 }
 
 .section-title {
   font-size: 1.125rem;
-  font-weight: 500;
-  color: #111827;
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0 0 1rem 0;
 }
 
-.activity-list {
+.publications-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 2rem;
+}
+
+.publication-item {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--gradient-primary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.publication-item:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
+}
+
+.publication-item:hover .publication-overlay {
+  opacity: 1;
+}
+
+.publication-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.publication-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.activity-item {
+  align-items: center;
+  justify-content: center;
   padding: 1rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 4px;
 }
 
-.activity-text {
-  color: #374151;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.5;
-}
-
-.activity-date {
+.publication-description {
+  text-align: center;
   font-size: 0.875rem;
-  color: #9ca3af;
+  line-height: 1.4;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  line-clamp: 3;
+}
+
+.no-publications {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.no-publications p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.no-publications p:first-child {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .publications-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .publications-grid {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px;
+  }
 }
 
 /* =============================
@@ -393,35 +517,39 @@
 }
 
 .save-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #ffffff;
-  background-color: #111827;
+  background: var(--gradient-primary);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .save-btn:hover {
-  background-color: #1f2937;
+  background: var(--gradient-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .cancel-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  color: var(--text-primary);
+  background-color: transparent;
+  border: 1px solid rgba(109, 58, 142, 0.3);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--transition);
 }
 
 .cancel-btn:hover {
-  background-color: #f9fafb;
+  background: rgba(109, 58, 142, 0.1);
+  border-color: var(--secondary);
 }
 
 /* =============================
@@ -433,8 +561,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px); /* Aplicando desenfoque al fondo */
+  background: rgba(45, 10, 67, 0.5);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -442,8 +570,12 @@
 }
 
 .modal-content {
-  background: #fff;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
   padding: 2rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(109, 58, 142, 0.2);
   border-radius: 8px;
   width: 90%;
   max-width: 500px;
