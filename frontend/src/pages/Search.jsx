@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import API from '../service';
 import '../styles/search.css'; // Importando estilos minimalistas
 
@@ -104,7 +103,6 @@ export default function Search() {
 
   return (
     <div className="search-container">
-      <Navbar />
       
       <main className="search-content">
         <div className="search-header">

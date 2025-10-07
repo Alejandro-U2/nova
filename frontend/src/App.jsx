@@ -1,23 +1,32 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/login.jsx";
 import Register from "./pages/register.jsx";
-import Home from "./pages/Home.jsx";
+import HomePremium from "./pages/HomePremium.jsx";
 import Profile from "./pages/Profile.jsx";
 import Search from "./pages/Search.jsx";
+import Crear from "./pages/Crear.jsx";
+import NavbarNew from "./components/NavbarNew.jsx";
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = ['/login', '/register', '/'].includes(location.pathname);
+
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/inicio" element={<Home />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/search" element={<Search />} />
-      <Route path="/forgot-password" element={<h1>Recuperar Contraseña</h1>} />
-      <Route path="/learn-more" element={<h1>Aprende Más </h1>} />
-    </Routes>
+    <div className="app">
+      {!hideNavbar && <NavbarNew />}
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        //<Route path="/home" element={<HomePremium />} />
+        <Route path="/inicio" element={<HomePremium />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/crear" element={<Crear />} />
+        <Route path="/forgot-password" element={<h1>Recuperar Contraseña</h1>} />
+        <Route path="/learn-more" element={<h1>Aprende Más </h1>} />
+      </Routes>
+    </div>
   );
 }
 

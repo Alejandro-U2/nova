@@ -13,6 +13,7 @@ app.use(express.json());
 // ----------Rutas
 app.use("/api/users", require("./rutas/user"));
 app.use("/api/profile", require("./rutas/profile"));
+app.use("/api/publications", require("./rutas/publication"));
 
 const startServer = async () => {
   try {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import '../styles/profile.css';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -59,6 +59,57 @@ export default function Profile() {
     }
   };
 
+  // Función para obtener las publicaciones del usuario
+  const fetchUserPublications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      
+      if (!token || !userData) {
+        console.error('No hay token de autenticación o datos de usuario');
+        setPublications([]);
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const userId = user.id || user._id;
+
+      if (!userId) {
+        console.error('No se pudo obtener el ID del usuario');
+        setPublications([]);
+        return;
+      }
+
+      console.log('Obteniendo publicaciones para el usuario:', userId);
+
+      const response = await fetch(`http://localhost:5000/api/publications/user/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Respuesta del servidor:', response.status, response.statusText);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Datos recibidos:', data);
+        setPublications(data.publications || []);
+      } else {
+        console.error('Error al obtener las publicaciones:', response.status, response.statusText);
+        // Si el usuario no tiene publicaciones, no es un error
+        if (response.status === 404) {
+          setPublications([]);
+        } else {
+          setPublications([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error al conectar con el servidor:', error);
+      setPublications([]);
+    }
+  };
+
   useEffect(() => {
     // Obtener datos del usuario desde localStorage para info básica
     const userData = localStorage.getItem('user');
@@ -68,6 +119,9 @@ export default function Profile() {
     
     // Obtener el perfil desde el backend
     fetchProfile();
+    
+    // Obtener las publicaciones del usuario
+    fetchUserPublications();
   }, []);
 
   const handleEditToggle = () => {
@@ -173,7 +227,6 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="profile-container">
-        <Navbar />
         <div className="loading">Cargando...</div>
       </div>
     );
@@ -181,10 +234,10 @@ export default function Profile() {
 
   // Usar datos del perfil del backend si están disponibles, sino usar datos básicos del usuario
   const displayData = profile || user || {};
+  const nickname = displayData.nickname || user?.nickname || "@usuario";
 
   return (
     <div className="profile-container">
-      <Navbar />
 
       <div className="profile-content">
         {/* Portada */}
@@ -210,6 +263,7 @@ export default function Profile() {
 
           <div className="user-details">
             <h2 className="user-name">{displayData.name || user?.name || "Usuario"}</h2>
+            <p className="user-nickname">{nickname}</p>
             <p className="user-bio">{displayData.bio || "Sin biografía"}</p>
           </div>
 
@@ -224,7 +278,7 @@ export default function Profile() {
         {/* Stats */}
         <div className="profile-stats">
           <div className="stat-item">
-            <span className="stat-number">12</span>
+            <span className="stat-number">{publications.length}</span>
             <span className="stat-label">Publicaciones</span>
           </div>
           <div className="stat-item">
@@ -237,28 +291,31 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Actividad */}
-        <div className="recent-activity">
-          <h3 className="section-title">Actividad reciente</h3>
-          <div className="activity-list">
-            <div className="activity-item">
-              <p className="activity-text">
-                "¡Hola mundo! Esta es mi primera publicación en Nova."
-              </p>
-              <span className="activity-date">Hace 2 días</span>
-            </div>
-            <div className="activity-item">
-              <p className="activity-text">
-                "Explorando las nuevas funcionalidades de la plataforma."
-              </p>
-              <span className="activity-date">Hace 1 semana</span>
-            </div>
-            <div className="activity-item">
-              <p className="activity-text">
-                "¡Qué gran comunidad estamos construyendo aquí!"
-              </p>
-              <span className="activity-date">Hace 2 semanas</span>
-            </div>
+        {/* Publicaciones */}
+        <div className="user-publications">
+          <h3 className="section-title">Publicaciones</h3>
+          <div className="publications-grid">
+            {publications.length > 0 ? (
+              publications.map((publication, index) => (
+                <div key={publication._id || index} className="publication-item">
+                  <img 
+                    src={publication.image || publication.imageUrl || "https://via.placeholder.com/300x300?text=Sin+Imagen"} 
+                    alt={publication.description || `Publicación ${index + 1}`}
+                    className="publication-image"
+                  />
+                  {publication.description && (
+                    <div className="publication-overlay">
+                      <p className="publication-description">{publication.description}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="no-publications">
+                <p>No hay publicaciones aún</p>
+                <p>¡Comparte tu primera publicación!</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
