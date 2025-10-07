@@ -20,7 +20,10 @@ function App() {
         <Route path="/register" element={<Register />} />
         //<Route path="/home" element={<HomePremium />} />
         <Route path="/inicio" element={<HomePremium />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile">
+        <Route index element={<Profile />} />          {/* /profile (propio) */}
+        <Route path=":id" element={<Profile />} />     {/* /profile/:id (otros) */}
+        </Route>        
         <Route path="/search" element={<Search />} />
         <Route path="/crear" element={<Crear />} />
         <Route path="/forgot-password" element={<h1>Recuperar Contraseña</h1>} />

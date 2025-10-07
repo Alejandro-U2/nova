@@ -1,229 +1,183 @@
-import React, { useState, useEffect } from 'react';
-import '../styles/profile.css';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import "../styles/profile.css";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const { id } = useParams(); // ID del perfil en la URL
+  const [user, setUser] = useState(null); // usuario logueado
+  const [profile, setProfile] = useState(null); // perfil que se está viendo
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: '',
-    bio: '',
-    coverPhoto: '',
-    avatar: ''
+    name: "",
+    bio: "",
+    coverPhoto: "",
+    avatar: "",
   });
   const [uploadMethod, setUploadMethod] = useState({
-    coverPhoto: 'url', // 'url' o 'file'
-    avatar: 'url'      // 'url' o 'file'
+    coverPhoto: "url",
+    avatar: "url",
   });
   const [selectedFiles, setSelectedFiles] = useState({
     coverPhoto: null,
-    avatar: null
+    avatar: null,
   });
 
-  // Función para obtener el perfil desde el backend
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No hay token de autenticación');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('http://localhost:5000/api/profile/me', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data.profile);
-        setEditForm({
-          name: data.profile.name || '',
-          bio: data.profile.bio || '',
-          coverPhoto: data.profile.coverPhoto || '',
-          avatar: data.profile.avatar || ''
-        });
-      } else {
-        console.error('Error al obtener el perfil:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error al conectar con el servidor:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Función para obtener las publicaciones del usuario
-  const fetchUserPublications = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      
-      if (!token || !userData) {
-        console.error('No hay token de autenticación o datos de usuario');
-        setPublications([]);
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      const userId = user.id || user._id;
-
-      if (!userId) {
-        console.error('No se pudo obtener el ID del usuario');
-        setPublications([]);
-        return;
-      }
-
-      console.log('Obteniendo publicaciones para el usuario:', userId);
-
-      const response = await fetch(`http://localhost:5000/api/publications/user/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('Respuesta del servidor:', response.status, response.statusText);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Datos recibidos:', data);
-        setPublications(data.publications || []);
-      } else {
-        console.error('Error al obtener las publicaciones:', response.status, response.statusText);
-        // Si el usuario no tiene publicaciones, no es un error
-        if (response.status === 404) {
-          setPublications([]);
-        } else {
-          setPublications([]);
-        }
-      }
-    } catch (error) {
-      console.error('Error al conectar con el servidor:', error);
-      setPublications([]);
-    }
-  };
-
+  // Cargar datos del usuario logueado
   useEffect(() => {
-    // Obtener datos del usuario desde localStorage para info básica
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-    
-    // Obtener el perfil desde el backend
-    fetchProfile();
-    
-    // Obtener las publicaciones del usuario
-    fetchUserPublications();
+    const userData = localStorage.getItem("user");
+    if (userData) setUser(JSON.parse(userData));
   }, []);
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
+  // Obtener perfil (propio o ajeno)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const endpoint = id
+          ? `http://localhost:5000/api/profile/user/${id}` // ✅ ruta corregida
+          : `http://localhost:5000/api/profile/me`;
+
+        const response = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const profileData = data.profile || data.user;
+          setProfile(profileData);
+          setEditForm({
+            name: profileData?.name || "",
+            bio: profileData?.bio || "",
+            coverPhoto: profileData?.coverPhoto || "",
+            avatar: profileData?.avatar || "",
+          });
+
+          // ✅ Detectar si es su propio perfil (id o _id)
+          const loggedUser = JSON.parse(localStorage.getItem("user"));
+          if (
+            loggedUser &&
+            (loggedUser._id === id ||
+              loggedUser.id === id ||
+              !id) // si no hay id (ruta /profile), también es suyo
+          ) {
+            setIsOwnProfile(true);
+          } else {
+            setIsOwnProfile(false);
+          }
+        } else {
+          console.error("Error al obtener el perfil:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error al conectar con el servidor:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [id]);
+
+  // Obtener publicaciones del usuario
+  useEffect(() => {
+    const fetchPublications = async () => {
+      try {
+        const targetId = id || JSON.parse(localStorage.getItem("user"))?._id;
+        const response = await fetch(
+          `http://localhost:5000/api/publications/user/${targetId}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setPublications(data.publications || []);
+        } else if (response.status === 404) {
+          setPublications([]);
+        } else {
+          console.error("Error al obtener publicaciones");
+        }
+      } catch (error) {
+        console.error("Error al conectar con el servidor:", error);
+      }
+    };
+
+    fetchPublications();
+  }, [id]);
+
+  // --- Edición de perfil ---
+  const handleEditToggle = () => setIsEditing(!isEditing);
+  const handleInputChange = (e) =>
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+
+  const handleMethodChange = (field, method) => {
+    setUploadMethod({ ...uploadMethod, [field]: method });
+    if (method === "url") setSelectedFiles({ ...selectedFiles, [field]: null });
+    else setEditForm({ ...editForm, [field]: "" });
   };
+
+  const handleFileChange = (e, field) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFiles({ ...selectedFiles, [field]: file });
+      const reader = new FileReader();
+      reader.onload = (event) =>
+        setEditForm({ ...editForm, [field]: event.target.result });
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const convertFileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No hay token de autenticación');
-        return;
-      }
+      const token = localStorage.getItem("token");
+      if (!token) return console.error("No hay token de autenticación");
 
-      // Preparar los datos para enviar
       let dataToSend = { ...editForm };
 
-      // Si hay archivos seleccionados, convertirlos a base64
-      if (selectedFiles.coverPhoto && uploadMethod.coverPhoto === 'file') {
-        dataToSend.coverPhoto = await convertFileToBase64(selectedFiles.coverPhoto);
+      if (selectedFiles.coverPhoto && uploadMethod.coverPhoto === "file") {
+        dataToSend.coverPhoto = await convertFileToBase64(
+          selectedFiles.coverPhoto
+        );
       }
-      if (selectedFiles.avatar && uploadMethod.avatar === 'file') {
+      if (selectedFiles.avatar && uploadMethod.avatar === "file") {
         dataToSend.avatar = await convertFileToBase64(selectedFiles.avatar);
       }
 
-      const response = await fetch('http://localhost:5000/api/profile/me', {
-        method: 'PUT',
+      const response = await fetch("http://localhost:5000/api/profile/me", {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(dataToSend)
+        body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
         const data = await response.json();
         setProfile(data.profile);
         setIsEditing(false);
-        console.log('Perfil actualizado exitosamente');
+        alert("Perfil actualizado correctamente ✅");
       } else {
-        console.error('Error al actualizar el perfil:', response.statusText);
+        console.error("Error al actualizar el perfil");
       }
     } catch (error) {
-      console.error('Error al conectar con el servidor:', error);
+      console.error("Error al conectar con el servidor:", error);
     }
   };
 
-  const handleInputChange = (e) => {
-    setEditForm({
-      ...editForm,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleMethodChange = (field, method) => {
-    setUploadMethod({
-      ...uploadMethod,
-      [field]: method
-    });
-    // Limpiar el campo correspondiente
-    if (method === 'url') {
-      setSelectedFiles({
-        ...selectedFiles,
-        [field]: null
-      });
-    } else {
-      setEditForm({
-        ...editForm,
-        [field]: ''
-      });
-    }
-  };
-
-  const handleFileChange = (e, field) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFiles({
-        ...selectedFiles,
-        [field]: file
-      });
-      
-      // Convertir archivo a base64 para preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setEditForm({
-          ...editForm,
-          [field]: event.target.result
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const convertFileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
+  // --- Renderizado ---
   if (loading) {
     return (
       <div className="profile-container">
@@ -232,80 +186,102 @@ export default function Profile() {
     );
   }
 
-  // Usar datos del perfil del backend si están disponibles, sino usar datos básicos del usuario
-  const displayData = profile || user || {};
-  const nickname = displayData.nickname || user?.nickname || "@usuario";
+  if (!profile) {
+    return (
+      <div className="profile-container">
+        <div className="loading">Perfil no encontrado</div>
+      </div>
+    );
+  }
+
+  const displayData = profile;
+  const nickname = displayData.nickname || "@usuario";
 
   return (
     <div className="profile-container">
-
       <div className="profile-content">
-        {/* Portada */}
+        {/* --- PORTADA --- */}
         <div className="profile-cover">
           <img
             src={displayData.coverPhoto || "https://picsum.photos/1200/300"}
-            alt="Foto de portada"
+            alt="Portada"
             className="cover-image"
           />
         </div>
 
-        {/* Info usuario con avatar al lado */}
+        {/* --- INFO USUARIO --- */}
         <div className="profile-info-section inline">
           <div className="avatar-container-inline">
             {displayData.avatar ? (
-              <img src={displayData.avatar} alt="Avatar" className="profile-avatar-img" />
+              <img
+                src={displayData.avatar}
+                alt="Avatar"
+                className="profile-avatar-img"
+              />
             ) : (
               <div className="profile-avatar">
-                {displayData.name?.charAt(0) || user?.name?.charAt(0) || "U"}
+                {displayData.name?.charAt(0).toUpperCase() || "U"}
               </div>
             )}
           </div>
 
           <div className="user-details">
-            <h2 className="user-name">{displayData.name || user?.name || "Usuario"}</h2>
+            <h2 className="user-name">{displayData.name || "Usuario"}</h2>
             <p className="user-nickname">{nickname}</p>
             <p className="user-bio">{displayData.bio || "Sin biografía"}</p>
           </div>
 
           <div className="profile-actions">
-            <button className="primary-btn">+ Añadir a historia</button>
-            <button className="secondary-btn" onClick={handleEditToggle}>
-              Editar perfil
-            </button>
+            {isOwnProfile ? (
+              <>
+                <button className="primary-btn">+ Añadir a historia</button>
+                <button className="secondary-btn" onClick={handleEditToggle}>
+                  Editar perfil
+                </button>
+              </>
+            ) : (
+              <button className="primary-btn">Seguir</button>
+            )}
           </div>
         </div>
 
-        {/* Stats */}
+        {/* --- ESTADÍSTICAS --- */}
         <div className="profile-stats">
           <div className="stat-item">
             <span className="stat-number">{publications.length}</span>
             <span className="stat-label">Publicaciones</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">85</span>
+            <span className="stat-number">{displayData.followers || 0}</span>
             <span className="stat-label">Seguidores</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">42</span>
+            <span className="stat-number">{displayData.following || 0}</span>
             <span className="stat-label">Siguiendo</span>
           </div>
         </div>
 
-        {/* Publicaciones */}
+        {/* --- PUBLICACIONES --- */}
         <div className="user-publications">
           <h3 className="section-title">Publicaciones</h3>
           <div className="publications-grid">
             {publications.length > 0 ? (
               publications.map((publication, index) => (
                 <div key={publication._id || index} className="publication-item">
-                  <img 
-                    src={publication.image || publication.imageUrl || "https://via.placeholder.com/300x300?text=Sin+Imagen"} 
+                  <img
+                    src={
+                      publication.image ||
+                      publication.imageUrl ||
+                      "https://via.placeholder.com/300x300?text=Sin+Imagen"
+                    }
                     alt={publication.description || `Publicación ${index + 1}`}
                     className="publication-image"
                   />
                   {publication.description && (
                     <div className="publication-overlay">
-                      <p className="publication-description">{publication.description}</p>
+                      <p className="publication-description">
+                        {publication.description}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -320,7 +296,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Modal de edición */}
+      {/* --- MODAL DE EDICIÓN --- */}
       {isEditing && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -332,27 +308,31 @@ export default function Profile() {
             </div>
 
             <div className="edit-form">
-              {/* Foto de portada */}
+              {/* Portada */}
               <div className="form-group">
                 <label className="form-label">Foto de portada</label>
                 <div className="upload-method-selector">
-                  <button 
+                  <button
                     type="button"
-                    className={`method-btn ${uploadMethod.coverPhoto === 'url' ? 'active' : ''}`}
-                    onClick={() => handleMethodChange('coverPhoto', 'url')}
+                    className={`method-btn ${
+                      uploadMethod.coverPhoto === "url" ? "active" : ""
+                    }`}
+                    onClick={() => handleMethodChange("coverPhoto", "url")}
                   >
                     URL
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    className={`method-btn ${uploadMethod.coverPhoto === 'file' ? 'active' : ''}`}
-                    onClick={() => handleMethodChange('coverPhoto', 'file')}
+                    className={`method-btn ${
+                      uploadMethod.coverPhoto === "file" ? "active" : ""
+                    }`}
+                    onClick={() => handleMethodChange("coverPhoto", "file")}
                   >
                     Archivo
                   </button>
                 </div>
-                
-                {uploadMethod.coverPhoto === 'url' ? (
+
+                {uploadMethod.coverPhoto === "url" ? (
                   <input
                     type="url"
                     name="coverPhoto"
@@ -365,33 +345,37 @@ export default function Profile() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'coverPhoto')}
+                    onChange={(e) => handleFileChange(e, "coverPhoto")}
                     className="form-input"
                   />
                 )}
               </div>
 
-              {/* Foto de perfil */}
+              {/* Avatar */}
               <div className="form-group">
                 <label className="form-label">Foto de perfil</label>
                 <div className="upload-method-selector">
-                  <button 
+                  <button
                     type="button"
-                    className={`method-btn ${uploadMethod.avatar === 'url' ? 'active' : ''}`}
-                    onClick={() => handleMethodChange('avatar', 'url')}
+                    className={`method-btn ${
+                      uploadMethod.avatar === "url" ? "active" : ""
+                    }`}
+                    onClick={() => handleMethodChange("avatar", "url")}
                   >
                     URL
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    className={`method-btn ${uploadMethod.avatar === 'file' ? 'active' : ''}`}
-                    onClick={() => handleMethodChange('avatar', 'file')}
+                    className={`method-btn ${
+                      uploadMethod.avatar === "file" ? "active" : ""
+                    }`}
+                    onClick={() => handleMethodChange("avatar", "file")}
                   >
                     Archivo
                   </button>
                 </div>
-                
-                {uploadMethod.avatar === 'url' ? (
+
+                {uploadMethod.avatar === "url" ? (
                   <input
                     type="url"
                     name="avatar"
@@ -404,12 +388,13 @@ export default function Profile() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'avatar')}
+                    onChange={(e) => handleFileChange(e, "avatar")}
                     className="form-input"
                   />
                 )}
               </div>
 
+              {/* Nombre */}
               <div className="form-group">
                 <label className="form-label">Nombre</label>
                 <input
@@ -422,7 +407,7 @@ export default function Profile() {
                 />
               </div>
 
-             
+              {/* Bio */}
               <div className="form-group">
                 <label className="form-label">Biografía</label>
                 <textarea
@@ -435,6 +420,7 @@ export default function Profile() {
                 />
               </div>
 
+              {/* Botones */}
               <div className="form-actions">
                 <button className="save-btn" onClick={handleSave}>
                   Guardar cambios
