@@ -1,11 +1,41 @@
-/* Estilos minimalistas para la página de búsqueda */
+/* ==========================================================
+   Estilos con paleta Plum Noir para la página de búsqueda
+   ========================================================== */
 
+:root {
+  --primary: #2D0A43;          /* Plum Noir - dark shade */
+  --primary-dark: #1a0627;     /* Plum Noir más oscuro */
+  --secondary: #6D3A8E;        /* Lavender Smoke - medium shade */
+  --accent: #FFA719;           /* Honey Drizzle - medium shade */
+  --warning: #FFCD7B;          /* Butterlight - light shade */
+  
+  --text-primary: #2D0A43;     /* Plum Noir para texto principal */
+  --text-secondary: #6D3A8E;   /* Lavender Smoke para texto secundario */
+  --text-muted: #a0aec0;       /* Gris claro mantener */
+  
+  --bg-primary: #FFFADA;       /* Buttercream - light shade */
+  --bg-secondary: #f7fafc;     /* Gris muy claro mantener */
+  --bg-glass: rgba(255, 250, 218, 0.95); /* Buttercream con transparencia */
+  
+  --gradient-primary: linear-gradient(135deg, #2D0A43 0%, #6D3A8E 100%);
+  --gradient-secondary: linear-gradient(135deg, #6D3A8E 0%, #FFA719 100%);
+  --gradient-accent: linear-gradient(135deg, #FFA719 0%, #FFCD7B 100%);
+  
+  --shadow-md: 0 4px 6px rgba(45, 10, 67, 0.1);
+  --shadow-lg: 0 10px 25px rgba(45, 10, 67, 0.15);
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --transition: all 0.3s ease;
+}
+
+/* --- CONTENEDOR PRINCIPAL --- */
 .search-container {
   display: flex;
   flex-direction: column;
-  margin-left: 220px; /* Ajuste para el espacio del navbar */
-  padding: 2rem;
-  background-color: #f9f9f9;
+  padding-top: 80px;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  background: var(--bg-primary);
   min-height: 100vh;
 }
 
@@ -14,6 +44,7 @@
   padding: 2rem;
 }
 
+/* --- ENCABEZADO --- */
 .search-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -21,15 +52,17 @@
 
 .search-header h1 {
   font-size: 2rem;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
+  font-weight: 700;
 }
 
 .search-header p {
   font-size: 1rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
+/* --- BUSCADOR --- */
 .search-box {
   display: flex;
   flex-direction: column;
@@ -47,70 +80,82 @@
 .search-input {
   flex: 1;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  border: 1px solid rgba(109, 58, 142, 0.3);
+  border-radius: var(--radius-md);
   font-size: 1rem;
   background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  color: #333; /* Asegurando que el texto sea visible */
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  transition: var(--transition);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(109, 58, 142, 0.1);
 }
 
 .search-btn {
   padding: 0.75rem 1rem;
-  background-color: #646cff;
+  background: var(--gradient-primary);
   color: #ffffff;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: var(--transition);
+  font-weight: 600;
 }
 
 .search-btn:hover {
-  background-color: #535bf2;
+  background: var(--gradient-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
+/* --- FILTROS --- */
 .search-filters {
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .filter-btn {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
-  color: #333;
-  background-color: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  color: var(--text-primary);
+  background-color: rgba(109, 58, 142, 0.1);
+  border: 1px solid rgba(109, 58, 142, 0.2);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: var(--transition);
+  font-weight: 500;
 }
 
 .filter-btn.active {
-  background-color: #646cff;
+  background: var(--gradient-primary);
   color: #ffffff;
+  border-color: var(--primary);
 }
 
 .filter-btn:hover {
-  background-color: #e0e7ff;
+  background: rgba(109, 58, 142, 0.15);
+  transform: translateY(-1px);
 }
 
-/* Loading and No Results */
+/* --- LOADING --- */
 .loading-message {
   text-align: center;
-  color: #666;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #e1e5e9;
-  border-top: 4px solid #667eea;
+  border: 4px solid rgba(109, 58, 142, 0.2);
+  border-top: 4px solid var(--secondary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
@@ -126,6 +171,7 @@
   color: #666;
 }
 
+/* --- RESULTADOS --- */
 .search-results {
   margin-top: 2rem;
 }
@@ -134,68 +180,103 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .user-card,
 .post-card {
-  padding: 1rem;
-  background-color: #ffffff;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(109, 58, 142, 0.1);
+  transition: var(--transition);
+}
+
+.user-card:hover,
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .user-card h4,
 .post-card h4 {
   font-size: 1.25rem;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .user-card p,
 .post-card p {
   font-size: 1rem;
-  color: #666;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
-/* Search Suggestions */
+/* --- BOTONES UNIFICADOS (SEGUIR / VER PERFIL) --- */
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Botón visual idéntico */
+.action-btn {
+  background: var(--gradient-primary);
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.4rem;
+  border-radius: 9999px; 
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 120px;
+}
+
+
+/* Enlace dentro del botón */
+.action-btn a {
+  color: inherit;
+  text-decoration: none;
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+.action-btn a:visited {
+  color: inherit;
+}
+
+/* Hover */
+.action-btn:hover {
+  background: var(--gradient-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* --- SUGERENCIAS --- */
 .search-suggestions {
   text-align: center;
-  color: #666;
+  color: var(--text-secondary);
+  padding: 2rem;
+  background: var(--bg-glass);
+  border-radius: var(--radius-lg);
+  margin: 2rem auto;
+  max-width: 600px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .search-content {
-    padding: 1rem;
-  }
-  
-  .search-header h1 {
-    font-size: 2rem;
-  }
-  
-  .search-input-container {
-    flex-direction: column;
-  }
-  
-  .search-filters {
-    flex-direction: column;
-  }
-  
-  .user-card {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .user-stats {
-    justify-content: center;
-  }
-  
-  .suggestions-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Search Tips Styles */
+/* --- TIPS DE BÚSQUEDA --- */
 .search-tips {
   background: #f8f9fa;
   border-radius: 10px;
@@ -230,3 +311,37 @@
   content: "🔍";
   margin-right: 0.5rem;
 }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .search-content {
+    padding: 1rem;
+  }
+
+  .search-input-container {
+    flex-direction: column;
+  }
+
+  .search-filters {
+    flex-direction: column;
+  }
+
+  .user-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .user-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ==========================================================
+   Fin de los estilos con paleta Plum Noir para la página de búsqueda
+   ========================================================== */
