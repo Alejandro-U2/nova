@@ -461,6 +461,14 @@ const HomePremium = () => {
             </div>
           </aside>
         </div>
+
+        {/* Floating Button */}
+        <button
+          className="floating-button"
+          onClick={() => navigate('/crear')}
+        >
+          +
+        </button>
       </div>
     </div>
   );

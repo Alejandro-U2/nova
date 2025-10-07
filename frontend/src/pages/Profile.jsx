@@ -88,25 +88,68 @@ export default function Profile() {
   useEffect(() => {
     const fetchPublications = async () => {
       try {
-        const targetId = id || JSON.parse(localStorage.getItem("user"))?._id;
+        const token = localStorage.getItem("token");
+        const userData = localStorage.getItem("user");
+        
+        if (!token) {
+          console.error("No hay token de autenticación");
+          return;
+        }
+
+        let targetId = id;
+        
+        // Si no hay id en la URL, usar el id del usuario logueado
+        if (!targetId && userData) {
+          try {
+            const parsedUser = JSON.parse(userData);
+            targetId = parsedUser._id || parsedUser.id;
+          } catch (parseError) {
+            console.error("Error al parsear datos del usuario:", parseError);
+            return;
+          }
+        }
+
+        // Verificar que tengamos un ID válido
+        if (!targetId || targetId === "undefined") {
+          console.error("No se pudo obtener un ID de usuario válido");
+          return;
+        }
+
+        console.log("Obteniendo publicaciones para el usuario:", targetId);
+
         const response = await fetch(
-          `http://localhost:5000/api/publications/user/${targetId}`
+          `http://localhost:5000/api/publications/user/${targetId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         if (response.ok) {
           const data = await response.json();
+          console.log("Publicaciones obtenidas:", data);
           setPublications(data.publications || []);
         } else if (response.status === 404) {
+          console.warn("No se encontraron publicaciones para este usuario.");
           setPublications([]);
         } else {
-          console.error("Error al obtener publicaciones");
+          console.error("Error al obtener publicaciones:", response.statusText);
+          const errorData = await response.text();
+          console.error("Detalles del error:", errorData);
         }
       } catch (error) {
         console.error("Error al conectar con el servidor:", error);
       }
     };
 
-    fetchPublications();
+    // Solo ejecutar si tenemos datos del usuario o un ID válido
+    const userData = localStorage.getItem("user");
+    if (id || userData) {
+      fetchPublications();
+    }
   }, [id]);
 
   // --- Edición de perfil ---

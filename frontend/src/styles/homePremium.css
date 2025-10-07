@@ -1086,8 +1086,46 @@ body {
   margin-top: 0 !important;
 }
 
-@media (max-width: 768px) {
-  .home-page {
-    padding-top: 100px !important; /* Menor en móviles */
+/* Floating Button */
+.floating-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.floating-button:hover {
+  box-shadow: var(--shadow-xl);
+  transform: scale(1.1);
+}
+
+.floating-button:active {
+  transform: scale(0.95);
+}
+
+/* Floating Button Animation */
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0);
   }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.floating-button {
+  animation: floating 2s infinite;
 }
