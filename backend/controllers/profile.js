@@ -71,10 +71,26 @@ const getProfileById = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, bio, coverPhoto, avatar } = req.body;
+    const { name, lastname, nickname, bio, coverPhoto, avatar } = req.body;
 
     // Buscar perfil existente
     let profile = await Profile.findOne({ user: userId });
+
+    // Actualizar datos del usuario en la colección de usuarios
+    if (name !== undefined || lastname !== undefined || nickname !== undefined) {
+      const user = await User.findById(userId);
+      
+      if (user) {
+        if (name !== undefined) user.name = name;
+        if (lastname !== undefined) user.lastname = lastname;
+        if (nickname !== undefined) user.nickname = nickname;
+        
+        await user.save();
+        console.log("Usuario actualizado:", user);
+      } else {
+        console.error("Usuario no encontrado con ID:", userId);
+      }
+    }
 
     if (!profile) {
       // Crear nuevo perfil

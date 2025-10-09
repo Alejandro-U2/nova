@@ -14,6 +14,7 @@ app.use(express.json());
 app.use("/api/users", require("./rutas/user"));
 app.use("/api/profile", require("./rutas/profile"));
 app.use("/api/publications", require("./rutas/publication"));
+app.use("/api/follow", require("./rutas/follow"));
 
 const startServer = async () => {
   try {

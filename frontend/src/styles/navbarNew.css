@@ -23,6 +23,12 @@
   box-shadow: 0 4px 30px rgba(45, 10, 67, 0.1);  /* Sombra con Plum Noir */
 }
 
+.navbar.hide-navbar {
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
 /* Logo mejorado con nueva paleta */
 .navbar .logo {
   font-size: 1.8rem;
@@ -41,6 +47,36 @@
 .navbar .logo:hover {
   transform: scale(1.05);
   filter: drop-shadow(0 0 10px rgba(109, 58, 142, 0.3));  /* Sombra con Lavender Smoke */
+}
+
+/* Logo como imagen */
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+  background: none !important;
+  border: none !important;
+  padding: 0;
+  outline: none;
+  transition: transform 0.3s ease;
+}
+
+.logo-link:hover {
+  background: none !important;
+  transform: scale(1.1) rotate(5deg);
+}
+
+.logo-link:focus {
+  background: none !important;
+  outline: none;
+}
+
+.logo-img {
+  height: 70px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 /* Navegación central con diseño moderno */
@@ -69,7 +105,8 @@
   margin: 0;
 }
 
-.navbar a {
+.navbar .nav-center a,
+.navbar ul a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -85,7 +122,8 @@
   overflow: hidden;
 }
 
-.navbar a::before {
+.navbar .nav-center a::before,
+.navbar ul a::before {
   content: '';
   position: absolute;
   top: 0;
@@ -96,18 +134,21 @@
   transition: left 0.5s ease;
 }
 
-.navbar a:hover::before {
+.navbar .nav-center a:hover::before,
+.navbar ul a:hover::before {
   left: 100%;
 }
 
-.navbar a:hover {
+.navbar .nav-center a:hover,
+.navbar ul a:hover {
   background: linear-gradient(135deg, #2D0A43 0%, #6D3A8E 100%);  /* Plum Noir a Lavender Smoke */
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(109, 58, 142, 0.3);  /* Sombra con Lavender Smoke */
 }
 
-.navbar a.active {
+.navbar .nav-center a.active,
+.navbar ul a.active {
   background: linear-gradient(135deg, #2D0A43 0%, #6D3A8E 100%);  /* Plum Noir a Lavender Smoke */
   color: white;
   box-shadow: 0 4px 15px rgba(109, 58, 142, 0.4);  /* Sombra con Lavender Smoke */
@@ -115,7 +156,21 @@
 
 /* Iconos para los links */
 .nav-icon {
-  font-size: 1.1rem;
+  width: 24px;
+  height: 24px;
+  color: #4a5568;
+  transition: all 0.3s ease;
+}
+
+.navbar .nav-center a:hover .nav-icon,
+.navbar .nav-center a.active .nav-icon,
+.navbar ul a:hover .nav-icon,
+.navbar ul a.active .nav-icon {
+  color: white;
+}
+
+.navbar .nav-text {
+  color: inherit;
 }
 
 /* Área de usuario mejorada */
@@ -136,6 +191,8 @@
   border: 1px solid rgba(109, 58, 142, 0.2);  /* Borde con Lavender Smoke */
   cursor: pointer;
   transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
 }
 
 .user-profile:hover {
@@ -198,6 +255,11 @@
   align-items: center;
   gap: 0.5rem;
   box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+}
+
+.logout-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .logout-btn:hover {
