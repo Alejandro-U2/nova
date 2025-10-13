@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import Login from "./pages/login.jsx";
+import Login from "./pages/Login.jsx";
 import Register from "./pages/register.jsx";
 import HomePremium from "./pages/HomePremium.jsx";
 import Profile from "./pages/Profile.jsx";
