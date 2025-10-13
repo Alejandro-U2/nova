@@ -19,8 +19,8 @@ app.use("/api/follow", require("./rutas/follow"));
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    app.listen(5000, '0.0.0.0', () => {
+      console.log('Servidor corriendo en http://0.0.0.0:5000');
     });
   } catch (err) {
     console.error("Error al conectar DB:", err);
