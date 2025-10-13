@@ -88,7 +88,7 @@ export default function Profile() {
       const token = localStorage.getItem("token");
       
       // Recargar contadores usando el endpoint unificado de contadores
-      fetch(`http://localhost:5000/api/follow/counters/${profileId}`, {
+      fetch(`${import.meta.env.VITE_API_URL}/api/follow/counters/${profileId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -122,8 +122,8 @@ export default function Profile() {
       try {
         const token = localStorage.getItem("token");
         const endpoint = id
-          ? `http://localhost:5000/api/profile/user/${id}` // ✅ ruta corregida
-          : `http://localhost:5000/api/profile/me`;
+          ? `${import.meta.env.VITE_API_URL}/api/profile/user/${id}` // ✅ ruta corregida
+          : `${import.meta.env.VITE_API_URL}/api/profile/me`;
 
         console.log("🔍 Obteniendo perfil desde:", endpoint);
         console.log("📝 ID del parámetro URL:", id);
@@ -286,7 +286,7 @@ export default function Profile() {
         }
         
         // Cargar contadores de seguidores y seguidos usando el endpoint unificado
-        const countersResponse = await fetch(`http://localhost:5000/api/follow/counters/${profileId}`, {
+        const countersResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/counters/${profileId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -329,7 +329,7 @@ export default function Profile() {
         // Solo verificar si estoy siguiendo a este usuario si NO es mi propio perfil
         if (!isOwnProfile) {
           // Usar el nuevo endpoint para verificar directamente si sigo a este usuario
-          const checkFollowResponse = await fetch(`http://localhost:5000/api/follow/check/${profileId}`, {
+          const checkFollowResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/check/${profileId}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -349,7 +349,7 @@ export default function Profile() {
           
           // Método alternativo (fallback) si la verificación directa falla
           console.log("Usando método alternativo para verificar seguimiento...");
-          const myFollowingResponse = await fetch(`http://localhost:5000/api/follow/following`, {
+          const myFollowingResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/following`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -529,7 +529,7 @@ export default function Profile() {
       }
       
       // Prueba con la API normal
-      let response = await fetch(`http://localhost:5000/api/follow/followers/${profileId}`, {
+      let response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/followers/${profileId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -539,7 +539,7 @@ export default function Profile() {
       if (!response.ok) {
         console.warn(`Error con la API normal (status ${response.status}), intentando endpoint alternativo...`);
         // Intentar con un endpoint alternativo si el primero falló
-        response = await fetch(`http://localhost:5000/api/follow/followers-list/${profileId}`, {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/followers-list/${profileId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -608,7 +608,7 @@ export default function Profile() {
       }
       
       // Prueba con la API normal
-      let response = await fetch(`http://localhost:5000/api/follow/following/${profileId}`, {
+      let response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/following/${profileId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -618,7 +618,7 @@ export default function Profile() {
       if (!response.ok) {
         console.warn(`Error con la API normal (status ${response.status}), intentando endpoint alternativo...`);
         // Intentar con un endpoint alternativo si el primero falló
-        response = await fetch(`http://localhost:5000/api/follow/following-list/${profileId}`, {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/following-list/${profileId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -718,7 +718,7 @@ export default function Profile() {
       const action = isFollowing ? 'unfollow' : 'follow';
       const method = isFollowing ? 'DELETE' : 'POST';
       
-      console.log(`Enviando petición ${method} a http://localhost:5000/api/follow/${action}/${profileId}`);
+      console.log(`Enviando petición ${method} a ${import.meta.env.VITE_API_URL}/api/follow/${action}/${profileId}`);
       
       // Intentar convertir cualquier formato de ObjectId a string para la URL
       const cleanProfileId = typeof profileId === 'object' ? 
@@ -727,7 +727,7 @@ export default function Profile() {
         
       console.log("ID de perfil limpio para la petición:", cleanProfileId);
       
-      const response = await fetch(`http://localhost:5000/api/follow/${action}/${cleanProfileId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/${action}/${cleanProfileId}`, {
         method: method,
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -770,7 +770,7 @@ export default function Profile() {
           if (profile) {
             const loadProfileFollowData = async () => {
               try {
-                const countersResponse = await fetch(`http://localhost:5000/api/follow/counters/${profileId}`, {
+                const countersResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/counters/${profileId}`, {
                   headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -852,7 +852,7 @@ export default function Profile() {
         console.log("Obteniendo publicaciones para el usuario:", targetId);
 
         const response = await fetch(
-          `http://localhost:5000/api/publications/user/${targetId}`,
+          `${import.meta.env.VITE_API_URL}/api/publications/user/${targetId}`,
           {
             method: "GET",
             headers: {
@@ -962,7 +962,7 @@ export default function Profile() {
 
       console.log("Enviando datos actualizados del perfil:", dataToSend);
       
-      const response = await fetch("http://localhost:5000/api/profile/me", {
+      const response = await fetch("${import.meta.env.VITE_API_URL}/api/profile/me", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

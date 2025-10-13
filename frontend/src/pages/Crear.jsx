@@ -26,7 +26,7 @@ export default function Crear() {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/publications/create', {
+      const response = await fetch('${import.meta.env.VITE_API_URL}/api/publications/create', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

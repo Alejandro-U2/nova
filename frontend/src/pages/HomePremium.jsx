@@ -39,7 +39,7 @@ const HomePremium = () => {
       else setLoadingMore(true);
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/publications/feed`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/publications/feed`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -95,7 +95,7 @@ const HomePremium = () => {
       const token = localStorage.getItem('token');
       
       // Primero cargar quiénes ya estoy siguiendo
-      const myFollowingResponse = await fetch('http://localhost:5000/api/follow/following', {
+      const myFollowingResponse = await fetch('${import.meta.env.VITE_API_URL}/api/follow/following', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -141,7 +141,7 @@ const HomePremium = () => {
       }
       
       // Luego cargar todos los usuarios
-      const usersResponse = await fetch('http://localhost:5000/api/users/all', {
+      const usersResponse = await fetch('${import.meta.env.VITE_API_URL}/api/users/all', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -205,7 +205,7 @@ const HomePremium = () => {
       const action = isCurrentlyFollowing ? 'unfollow' : 'follow';
       const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
       
-      const response = await fetch(`http://localhost:5000/api/follow/${action}/${userId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/${action}/${userId}`, {
         method: method,
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -266,7 +266,7 @@ const HomePremium = () => {
   const handleLike = async (publicationId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/publications/${publicationId}/like`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/publications/${publicationId}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -312,7 +312,7 @@ const HomePremium = () => {
   const getUserAvatar = (publication) => {
     // Por ahora deshabilitado hasta que se configure la ruta en el backend
     // if (publication?.userProfile?.avatar && publication.userProfile.avatar !== 'default.png') {
-    //   return `http://localhost:5000/api/users/avatar/${publication.userProfile.avatar}`;
+    //   return `${import.meta.env.VITE_API_URL}/api/users/avatar/${publication.userProfile.avatar}`;
     // }
     return null;
   };

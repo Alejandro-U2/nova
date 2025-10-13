@@ -294,7 +294,7 @@ export default function Login() {
     if (!validate()) return;
     if (!verifyRecaptcha()) { setAlert({ show: true, type: 'error', text: 'Completa el captcha antes de continuar' }); return; }
     try {
-      const res = await fetch('http://localhost:5000/api/users/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }),
       });
       const data = await res.json();

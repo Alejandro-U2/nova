@@ -76,7 +76,7 @@ export default function Search() {
     const statsPromises = users.map(async (user) => {
       try {
         // Cargar contadores
-        const countersResponse = await fetch(`http://localhost:5000/api/follow/counters/${user._id}`, {
+        const countersResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/counters/${user._id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -84,7 +84,7 @@ export default function Search() {
         });
         
         // Cargar perfil para obtener avatar
-        const profileResponse = await fetch(`http://localhost:5000/api/profile/user/${user._id}`, {
+        const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/user/${user._id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -146,7 +146,7 @@ export default function Search() {
   const loadFollowingUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/follow/following', {
+      const response = await fetch('${import.meta.env.VITE_API_URL}/api/follow/following', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -202,7 +202,7 @@ export default function Search() {
       const action = isCurrentlyFollowing ? 'unfollow' : 'follow';
       const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
       
-      const response = await fetch(`http://localhost:5000/api/follow/${action}/${userId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/${action}/${userId}`, {
         method: method,
         headers: {
           'Authorization': `Bearer ${token}`,
