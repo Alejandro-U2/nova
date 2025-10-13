@@ -14,12 +14,14 @@ app.use(express.json());
 app.use("/api/users", require("./rutas/user"));
 app.use("/api/profile", require("./rutas/profile"));
 app.use("/api/publications", require("./rutas/publication"));
+app.use("/api/follow", require("./rutas/follow"));
 
 const startServer = async () => {
   try {
     await connectDB();
+HEAD
     app.listen(PORT, '0.0.0.0', () => {
-      console.log('Servidor corriendo en http://0.0.0.0:5000');
+      console.log(`Servidor corriendo en http://0.0.0.0:${PORT}`);
     });
   } catch (err) {
     console.error("Error al conectar DB:", err);

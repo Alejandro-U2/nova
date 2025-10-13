@@ -8,6 +8,14 @@
   transition: opacity 0.4s ease;
 }
 
+.loader-screen.white-bg {
+  background: #ffffff;
+}
+
+.loader-screen.white-bg .loader-content {
+  color: #333;
+}
+
 .loader-content {
   text-align: center;
   color: #fff;
@@ -17,6 +25,33 @@
   width: 120px;  /* ajusta tamaño según tu imagen */
   height: auto;
   margin-bottom: 1rem;
+}
+
+.loader-gif {
+  width: 120px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+/* Logo animado para la pantalla de ingreso */
+.loader-gif-animated {
+  width: 280px;
+  animation: floatAndPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes floatAndPulse {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.9;
+  }
 }
 
 .loader-text {

@@ -26,12 +26,14 @@ export default function Login() {
   } catch { /* ignore */ }
 
   let forceLoaderParam = false;
+  let skipLoaderParam = false;
   try {
     const qp = (typeof window !== 'undefined' && window.location && window.location.search) ? new URLSearchParams(window.location.search) : null;
     forceLoaderParam = qp ? (qp.get('forceLoader') === '1' || qp.get('loader') === '1') : false;
+    skipLoaderParam = qp ? qp.get('skipLoader') === '1' : false;
   } catch { /* ignore */ }
 
-  const shouldSkipLoader = forcedSkip || (loaderShown && navType !== 'navigate' && !forceLoaderParam);
+  const shouldSkipLoader = forcedSkip || skipLoaderParam || (loaderShown && navType !== 'navigate' && !forceLoaderParam);
 
   const [loaderVisible, setLoaderVisible] = useState(!shouldSkipLoader);
   const [contentVisible, setContentVisible] = useState(shouldSkipLoader);
@@ -198,12 +200,15 @@ export default function Login() {
 
     const el = gradientRef.current;
     if (!el) return;
-    const palettes = [
+    const basePalettes = [
       ['62,35,255', '60,255,60'],
       ['255,35,98', '45,175,230'],
       ['214,41,118', '254,218,117'],
       ['255,0,255', '255,128,0'],
     ];
+    
+    // Agregar el primer color al final para crear un loop circular suave
+    const palettes = [...basePalettes, basePalettes[0]];
 
     let idx = 0;
     let animationId = null;
@@ -212,13 +217,15 @@ export default function Login() {
 
     const parse = (s) => s.split(',').map(Number);
     const lerp = (a, b, t) => a + (b - a) * t;
+    const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
     const step = (timestamp) => {
       if (!start) start = timestamp;
-      const t = Math.min((timestamp - start) / DURATION, 1);
+      const progress = Math.min((timestamp - start) / DURATION, 1);
+      const t = easeInOutCubic(progress);
 
-      const c0 = palettes[idx % palettes.length];
-      const c1 = palettes[(idx + 1) % palettes.length];
+      const c0 = palettes[idx];
+      const c1 = palettes[idx + 1];
       const fromA = parse(c0[0]);
       const fromB = parse(c0[1]);
       const toA = parse(c1[0]);
@@ -228,16 +235,17 @@ export default function Login() {
       const g1 = Math.round(lerp(fromA[1], toA[1], t));
       const b1 = Math.round(lerp(fromA[2], toA[2], t));
 
-      const r2 = Math.round(lerp(fromB[0], toA[0], t));
-      const g2 = Math.round(lerp(fromB[1], toA[1], t));
-      const b2 = Math.round(lerp(fromB[2], toA[2], t));
+      const r2 = Math.round(lerp(fromB[0], toB[0], t));
+      const g2 = Math.round(lerp(fromB[1], toB[1], t));
+      const b2 = Math.round(lerp(fromB[2], toB[2], t));
 
       el.style.backgroundImage = `linear-gradient(45deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
 
-      if (t < 1) {
+      if (progress < 1) {
         animationId = requestAnimationFrame(step);
       } else {
-        idx = (idx + 1) % palettes.length;
+        // Reiniciar al principio cuando llegue al último color
+        idx = idx + 1 >= palettes.length - 1 ? 0 : idx + 1;
         start = null;
         animationId = requestAnimationFrame(step);
       }
@@ -286,7 +294,7 @@ export default function Login() {
     if (!validate()) return;
     if (!verifyRecaptcha()) { setAlert({ show: true, type: 'error', text: 'Completa el captcha antes de continuar' }); return; }
     try {
-      const res = await fetch('http://localhost:5000/api/users/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
@@ -317,7 +325,8 @@ export default function Login() {
         show={showTransitionLoader} 
         text="Ingresando al sistema" 
         fixed 
-        image="/img/nova.png" 
+        image="/img/nova.png"
+        hideText={true}
       />
 
       {/* Loader inicial */}

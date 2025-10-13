@@ -1,0 +1,158 @@
+/* Estilos para la sección de seguimiento en el perfil */
+.profile-follow-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #f8f9fa;
+}
+
+/* Contadores de seguidores y seguidos */
+.follow-counters {
+  display: flex;
+  gap: 20px;
+}
+
+.follow-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.follow-counter:hover {
+  transform: translateY(-2px);
+}
+
+.counter-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.counter-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Modal de seguidores/siguiendo */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.follow-modal {
+  background-color: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.modal-body {
+  padding: 10px;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+/* Lista de seguidores/seguidos */
+.follow-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.follow-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.follow-item:last-child {
+  border-bottom: none;
+}
+
+.follow-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.follow-info {
+  flex: 1;
+}
+
+.follow-info h3 {
+  margin: 0 0 5px;
+  font-size: 1rem;
+}
+
+.follow-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.empty-list {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .profile-follow-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .follow-modal {
+    width: 95%;
+  }
+  
+  .follow-info p {
+    max-width: 150px;
+  }
+}

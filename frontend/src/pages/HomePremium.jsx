@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/homePremium.css';
 const HomePremium = () => {
@@ -11,6 +11,7 @@ const HomePremium = () => {
   const [user, setUser] = useState(null);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [followingUsers, setFollowingUsers] = useState(new Set());
+  const [totalUsers, setTotalUsers] = useState(0);
   const navigate = useNavigate();
 
   // Verificar autenticación
@@ -38,7 +39,7 @@ const HomePremium = () => {
       else setLoadingMore(true);
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/publications/feed`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/publications/feed`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -88,6 +89,101 @@ const HomePremium = () => {
     }
   };
 
+  // Cargar usuarios sugeridos
+  const loadSuggestedUsers = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Primero cargar quiénes ya estoy siguiendo
+      const myFollowingResponse = await fetch('${import.meta.env.VITE_API_URL}/api/follow/following', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      let currentFollowing = new Set();
+      
+      if (myFollowingResponse.ok) {
+        const followingData = await myFollowingResponse.json();
+        console.log('📊 Datos de following recibidos:', followingData);
+        if (followingData.following) {
+          currentFollowing = new Set(
+            followingData.following.map(follow => {
+              console.log('🔍 Analizando follow:', JSON.stringify(follow, null, 2));
+              
+              // Manejar diferentes estructuras de datos
+              if (typeof follow.followed === 'object' && follow.followed._id) {
+                console.log('✅ Usuario seguido (objeto):', follow.followed.name, 'ID:', follow.followed._id);
+                return follow.followed._id;
+              } else if (typeof follow.followed === 'string') {
+                console.log('✅ Usuario seguido (string ID):', follow.followed);
+                return follow.followed;
+              } else if (follow._id) {
+                // Puede que el objeto follow tenga directamente el ID del usuario seguido
+                console.log('✅ Usuario seguido (follow._id):', follow._id);
+                return follow._id;
+              } else if (follow.user && typeof follow.user === 'object' && follow.user._id) {
+                // Puede que tenga un campo user en lugar de followed
+                console.log('✅ Usuario seguido (follow.user._id):', follow.user._id);
+                return follow.user._id;
+              }
+              console.log('⚠️ Formato desconocido:', follow);
+              return null;
+            }).filter(id => id !== null)
+          );
+          console.log('🎯 Total de usuarios que sigo:', currentFollowing.size);
+          console.log('🎯 IDs de usuarios que sigo:', Array.from(currentFollowing));
+        }
+        setFollowingUsers(currentFollowing);
+      } else {
+        console.error('❌ Error al cargar usuarios que sigo');
+      }
+      
+      // Luego cargar todos los usuarios
+      const usersResponse = await fetch('${import.meta.env.VITE_API_URL}/api/users/all', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        
+        // Guardar el total de usuarios en el sistema
+        if (usersData.users && Array.isArray(usersData.users)) {
+          setTotalUsers(usersData.users.length);
+        }
+        
+        // Filtrar para no mostrar al usuario actual y los que ya sigo
+        const currentUserId = user?.id || user?._id;
+        console.log('👤 ID del usuario actual:', currentUserId);
+        
+        const filteredUsers = usersData.users
+          .filter(suggestedUser => {
+            // Excluir al usuario actual
+            if (suggestedUser._id === currentUserId) {
+              console.log('❌ Excluido (usuario actual):', suggestedUser.name);
+              return false;
+            }
+            // Excluir a los usuarios que ya sigo
+            const isFollowing = currentFollowing.has(suggestedUser._id);
+            console.log(`${isFollowing ? '❌' : '✅'} Usuario ${suggestedUser.name} (${suggestedUser._id}): siguiendo = ${isFollowing}`);
+            if (isFollowing) return false;
+            return true;
+          })
+          .slice(0, 5);
+        
+        console.log('📋 Usuarios sugeridos después del filtro:', filteredUsers.map(u => ({name: u.name, id: u._id})));
+        console.log('📊 Total de sugerencias:', filteredUsers.length);
+        setSuggestedUsers(filteredUsers);
+      }
+    } catch (error) {
+      console.error('Error loading suggested users:', error);
+    }
+  }, [user]);
+
   useEffect(() => {
     loadPublications();
   }, []);
@@ -97,13 +193,20 @@ const HomePremium = () => {
     if (user) {
       loadSuggestedUsers();
     }
-  }, [user]);
+  }, [user, loadSuggestedUsers]);
 
-  // Cargar usuarios sugeridos
-  const loadSuggestedUsers = async () => {
+  // Manejar seguir usuario
+  const handleFollow = async (userId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/users/all', {
+      const isCurrentlyFollowing = followingUsers.has(userId);
+      
+      // Determinar la acción (seguir o dejar de seguir)
+      const action = isCurrentlyFollowing ? 'unfollow' : 'follow';
+      const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/${action}/${userId}`, {
+        method: method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -112,27 +215,50 @@ const HomePremium = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Filtrar para no mostrar al usuario actual y limitar a 5 sugerencias
-        const currentUserId = user?.id || user?._id;
-        const filteredUsers = data.users
-          .filter(suggestedUser => suggestedUser._id !== currentUserId)
-          .slice(0, 5);
-        setSuggestedUsers(filteredUsers);
+        console.log(data.message);
+        
+        // Actualizar el estado de seguimiento
+        if (isCurrentlyFollowing) {
+          // Dejamos de seguir
+          setFollowingUsers(prev => {
+            const newSet = new Set([...prev]);
+            newSet.delete(userId);
+            return newSet;
+          });
+        } else {
+          // Empezamos a seguir
+          setFollowingUsers(prev => new Set([...prev, userId]));
+          // Eliminar de las sugerencias
+          setSuggestedUsers(prev => prev.filter(user => user._id !== userId));
+        }
+        
+        // Disparar evento para actualizar otras partes de la app
+        const followEvent = new CustomEvent('followStatusChanged', { 
+          detail: { userId, isFollowing: !isCurrentlyFollowing } 
+        });
+        window.dispatchEvent(followEvent);
+        
+        // Guardar en localStorage para persistir el estado
+        try {
+          const followData = JSON.parse(localStorage.getItem('followData') || '{}');
+          followData[userId] = !isCurrentlyFollowing;
+          localStorage.setItem('followData', JSON.stringify(followData));
+        } catch (err) {
+          console.error("Error al guardar estado de seguimiento en localStorage:", err);
+        }
+        
+        // Si dejamos de seguir, recargar sugerencias para que vuelva a aparecer
+        if (isCurrentlyFollowing) {
+          loadSuggestedUsers();
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('Error al seguir/dejar de seguir:', errorData.message);
+        alert(`Error: ${errorData.message}`);
       }
     } catch (error) {
-      console.error('Error loading suggested users:', error);
-    }
-  };
-
-  // Manejar seguir usuario
-  const handleFollow = async (userId) => {
-    try {
-      // Aquí irá la lógica para seguir usuario cuando tengamos el endpoint
-      // Por ahora solo actualizar el estado local
-      setFollowingUsers(prev => new Set([...prev, userId]));
-      console.log(`Siguiendo usuario: ${userId}`);
-    } catch (error) {
-      console.error('Error following user:', error);
+      console.error('Error al conectar con el servidor:', error);
+      alert('Error de conexión');
     }
   };
 
@@ -140,7 +266,7 @@ const HomePremium = () => {
   const handleLike = async (publicationId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/publications/${publicationId}/like`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/publications/${publicationId}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -186,7 +312,7 @@ const HomePremium = () => {
   const getUserAvatar = (publication) => {
     // Por ahora deshabilitado hasta que se configure la ruta en el backend
     // if (publication?.userProfile?.avatar && publication.userProfile.avatar !== 'default.png') {
-    //   return `http://localhost:5000/api/users/avatar/${publication.userProfile.avatar}`;
+    //   return `${import.meta.env.VITE_API_URL}/api/users/avatar/${publication.userProfile.avatar}`;
     // }
     return null;
   };
@@ -252,7 +378,7 @@ const HomePremium = () => {
               <span className="label">Publicaciones</span>
             </div>
             <div className="stat">
-              <span className="number">2.4k</span>
+              <span className="number">{totalUsers}</span>
               <span className="label">Usuarios</span>
             </div>
           </div>
@@ -424,7 +550,7 @@ const HomePremium = () => {
                       <button 
                         className={`follow-btn ${followingUsers.has(suggestedUser._id) ? 'following' : ''}`}
                         onClick={() => handleFollow(suggestedUser._id)}
-                        disabled={followingUsers.has(suggestedUser._id)}
+                        title={followingUsers.has(suggestedUser._id) ? 'Haz clic para dejar de seguir' : 'Haz clic para seguir'}
                       >
                         {followingUsers.has(suggestedUser._id) ? 'Siguiendo' : 'Seguir'}
                       </button>
