@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import '../styles/login.css';
 import Loader from "../components/Loader";   // ⬅️ Import del nuevo componente
 
@@ -40,10 +43,12 @@ export default function Login() {
   const [removeLoader, setRemoveLoader] = useState(shouldSkipLoader);
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
 
-  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '430026294395-41egmg0q1jj0krs2l9q67dmg0b82plt8.apps.googleusercontent.com';
   const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID || '';
-  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
-  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
+  
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [captchaToken, setCaptchaToken] = useState(null);
 
   const loadScript = (src, id) => new Promise((resolve, reject) => {
     if (typeof window === 'undefined') return reject(new Error('no-window'));
@@ -60,16 +65,6 @@ export default function Login() {
 
   useEffect(() => {
     let mounted = true;
-    if (GOOGLE_CLIENT_ID) {
-      loadScript('https://accounts.google.com/gsi/client', 'gsi-client').then(() => {
-        try {
-          if (!mounted) return;
-          if (window.google && window.google.accounts && window.google.accounts.id) {
-            window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
-          }
-        } catch { /* ignore */ }
-      }).catch(() => { /* ignore */ });
-    }
 
     if (FACEBOOK_APP_ID) {
       loadScript('https://connect.facebook.net/en_US/sdk.js', 'fb-sdk').then(() => {
@@ -82,53 +77,51 @@ export default function Login() {
       }).catch(() => { /* ignore */ });
     }
 
-    if (RECAPTCHA_SITE_KEY) {
-      loadScript('https://www.google.com/recaptcha/api.js?render=explicit', 'recaptcha').then(() => {
-        try {
-          if (!mounted) return;
-          if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
-            const id = window.grecaptcha.render('recaptcha-container', {
-              sitekey: RECAPTCHA_SITE_KEY,
-              size: 'normal',
-            });
-            setRecaptchaWidgetId(id);
-          }
-        } catch { /* ignore */ }
-      }).catch(() => { /* ignore */ });
-    }
-
     return () => { mounted = false; };
   }, []); // eslint-disable-line
 
-  const handleGoogleCredential = async (response) => {
-    if (!response || !response.credential) return;
+  // ============================================================
+  // 🔹 LOGIN CON GOOGLE usando @react-oauth/google
+  // ============================================================
+  const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await fetch('/api/auth/google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: response.credential }) });
+      const decoded = jwtDecode(credentialResponse.credential);
+
+      // Datos del usuario Google
+      const googleData = {
+        email: decoded.email,
+        name: decoded.name,
+        image: decoded.picture,
+        sub: decoded.sub, // ID único de Google
+        credential: credentialResponse.credential,
+      };
+
+      const res = await fetch(`${API_URL}/users/google-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(googleData),
+      });
+
       const data = await res.json();
-      if (res.ok) {
+
+      if (res.ok && data.status === 'success') {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         try { sessionStorage.setItem('nova_loader_shown', '1'); } catch { /* ignore */ }
-        try {
-          if (remember) localStorage.setItem('nova_remember', JSON.stringify({ email }));
-          else localStorage.removeItem('nova_remember');
-        } catch { /* ignore */ }
+        setAlert({ show: true, type: 'success', text: 'Inicio de sesión con Google exitoso' });
         setShowTransitionLoader(true);
         setTimeout(() => navigate('/home'), 700);
       } else {
-        setAlert({ show: true, type: 'error', text: data.message || 'Error en inicio con Google' });
+        setAlert({ show: true, type: 'error', text: data.message || 'Error al iniciar sesión con Google' });
       }
-    } catch {
-      setAlert({ show: true, type: 'error', text: 'Error de conexión con el servidor' });
+    } catch (error) {
+      console.error('Error en login con Google:', error);
+      setAlert({ show: true, type: 'error', text: 'Error al procesar el inicio de sesión con Google' });
     }
   };
 
-  const handleGoogleLogin = () => {
-    if (!GOOGLE_CLIENT_ID || !window.google || !window.google.accounts || !window.google.accounts.id) {
-      setAlert({ show: true, type: 'error', text: 'Google login no está configurado' });
-      return;
-    }
-    try { window.google.accounts.id.prompt(); } catch { setAlert({ show: true, type: 'error', text: 'No se pudo iniciar Google Sign-In' }); }
+  const handleGoogleError = () => {
+    setAlert({ show: true, type: 'error', text: 'Error en la autenticación con Google' });
   };
 
   const handleFacebookLogin = () => {
@@ -160,13 +153,19 @@ export default function Login() {
     }, { scope: 'email' });
   };
 
-  const verifyRecaptcha = () => {
-    if (!RECAPTCHA_SITE_KEY) return true;
+  const verifyRecaptcha = async () => {
+    if (!executeRecaptcha) {
+      console.log('reCAPTCHA no disponible aún');
+      return null;
+    }
+
     try {
-      if (!window.grecaptcha || recaptchaWidgetId === null) return false;
-      const resp = window.grecaptcha.getResponse(recaptchaWidgetId);
-      return !!resp;
-    } catch { return false; }
+      const token = await executeRecaptcha('login');
+      return token;
+    } catch (error) {
+      console.error('Error ejecutando reCAPTCHA:', error);
+      return null;
+    }
   };
 
   const [errors, setErrors] = useState({ email: '', password: '' });
@@ -292,14 +291,23 @@ export default function Login() {
     ev.preventDefault();
     setAlert({ show: false, text: '' });
     if (!validate()) return;
-    if (!verifyRecaptcha()) { setAlert({ show: true, type: 'error', text: 'Completa el captcha antes de continuar' }); return; }
+    
+    // Ejecutar reCAPTCHA v3
+    const captchaToken = await verifyRecaptcha();
+    if (!captchaToken) { 
+      setAlert({ show: true, type: 'error', text: '❌ Error al verificar reCAPTCHA. Intenta de nuevo.' }); 
+      return; 
+    }
+
     try {
-      const res = await fetch('http://localhost:5000/api/users/login', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }),
+      const res = await fetch(`${API_URL}/users/login`, {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ email, password, captchaValue: captchaToken }),
       });
       const data = await res.json();
-      if (res.ok) {
-        setAlert({ show: true, type: 'success', text: 'Inicio de sesión exitoso' });
+      if (res.ok && data.status === 'success') {
+        setAlert({ show: true, type: 'success', text: '✅ Inicio de sesión exitoso' });
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         try { sessionStorage.setItem('nova_loader_shown', '1'); } catch { /* ignore */ }
@@ -310,11 +318,11 @@ export default function Login() {
         setShowTransitionLoader(true);
         setTimeout(() => navigate('/home'), 700);
       } else {
-        setAlert({ show: true, type: 'error', text: data.message || 'Credenciales inválidas' });
+        setAlert({ show: true, type: 'error', text: `❌ ${data.message || 'Credenciales inválidas'}` });
       }
     } catch (err) {
       console.error(err);
-      setAlert({ show: true, type: 'error', text: 'Error de conexión con el servidor' });
+      setAlert({ show: true, type: 'error', text: '❌ Error de conexión con el servidor' });
     }
   };
 
@@ -390,13 +398,25 @@ export default function Login() {
                     <a href="#">Olvidaste la contraseña</a>
                   </div>
 
+                  {/* ✅ reCAPTCHA v3 es invisible - se ejecuta automáticamente al enviar */}
+                  
                   <button type="submit" className="btnn">Iniciar Sesión</button>
 
                   <div className="button">
-                    <button type="button" onClick={handleGoogleLogin} className="social google"> 
-                      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="#ffffff"><path d="M21.8 10.1h-9.8v3.8h5.6c-.6 2-2.6 3.9-5.6 3.9-3.2 0-5.8-2.7-5.8-6s2.6-6 5.8-6c1.9 0 3.1.8 3.8 1.5l2.7-2.6C17 3.1 15 2.2 12 2.2 6.6 2.2 2.2 6.7 2.2 12s4.4 9.8 9.8 9.8c5.7 0 9.8-4 9.8-9.8 0-.7-.1-1.4-.2-1.9z"/></svg>
-                      <span>Iniciar sesión con Google</span>
-                    </button>
+                    {/* LOGIN CON GOOGLE usando @react-oauth/google */}
+                    <div className="social-google-wrapper">
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        theme="filled_blue"
+                        size="large"
+                        text="signin_with"
+                        shape="rectangular"
+                        logo_alignment="left"
+                        width="100%"
+                      />
+                    </div>
+                    
                     <button type="button" onClick={handleFacebookLogin} className="social facebook">
                       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="#ffffff"><path d="M22 12.07C22 6.61 17.52 2.13 12.06 2.13 6.61 2.13 2.13 6.61 2.13 12.07c0 4.89 3.55 8.94 8.19 9.75v-6.9H8.2v-2.85h2.12V9.03c0-2.08 1.23-3.22 3.12-3.22.9 0 1.84.16 1.84.16v2.03h-1.04c-1.02 0-1.34.64-1.34 1.29v1.56h2.28l-.36 2.85h-1.92v6.9c4.63-.81 8.19-4.86 8.19-9.75z"/></svg>
                       <span>Iniciar sesión con Facebook</span>
