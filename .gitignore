@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.local
+.env.production
+backend/.env
+
+# Documentation with credentials (DO NOT COMMIT)
+CHECKLIST.md
+CREDENTIALS_SUMMARY.txt
+SETUP_GOOGLE_RECAPTCHA.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

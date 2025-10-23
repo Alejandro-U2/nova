@@ -6,6 +6,7 @@ const { auth } = require("../middlewares/auth");
 router.get("/prueba-usuario", auth, userController.pruebaUser);
 router.post("/register", userController.registerUser);
 router.post("/login", userController.loginUser);
+router.post("/google-login", userController.googleLogin); // Nueva ruta para login con Google
 router.get("/search", userController.searchUsers); // Nueva ruta para búsqueda
 router.get("/all", userController.getAllUsers); // Ruta para debug - obtener todos los usuarios
 router.get("/:id", userController.getUser);
