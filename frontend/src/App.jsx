@@ -5,31 +5,38 @@ import HomePremium from "./pages/HomePremium.jsx";
 import Profile from "./pages/Profile.jsx";
 import Search from "./pages/Search.jsx";
 import Crear from "./pages/Crear.jsx";
+import FaceDetection from "./pages/FaceDetection.jsx";
+import RegisteredFaces from "./pages/RegisteredFaces.jsx";
 import NavbarNew from "./components/NavbarNew.jsx";
+import { ToastProvider } from "./components/ToastNotification.jsx";
 
 function App() {
   const location = useLocation();
   const hideNavbar = ['/login', '/register', '/'].includes(location.pathname);
 
   return (
-    <div className="app">
-      {!hideNavbar && <NavbarNew />}
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        //<Route path="/home" element={<HomePremium />} />
-        <Route path="/inicio" element={<HomePremium />} />
-        <Route path="/profile">
-        <Route index element={<Profile />} />          {/* /profile (propio) */}
-        <Route path=":id" element={<Profile />} />     {/* /profile/:id (otros) */}
-        </Route>        
-        <Route path="/search" element={<Search />} />
-        <Route path="/crear" element={<Crear />} />
-        <Route path="/forgot-password" element={<h1>Recuperar Contraseña</h1>} />
-        <Route path="/learn-more" element={<h1>Aprende Más </h1>} />
-      </Routes>
-    </div>
+    <ToastProvider>
+      <div className="app">
+        {!hideNavbar && <NavbarNew />}
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          //<Route path="/home" element={<HomePremium />} />
+          <Route path="/inicio" element={<HomePremium />} />
+          <Route path="/profile">
+          <Route index element={<Profile />} />          {/* /profile (propio) */}
+          <Route path=":id" element={<Profile />} />     {/* /profile/:id (otros) */}
+          </Route>        
+          <Route path="/search" element={<Search />} />
+          <Route path="/crear" element={<Crear />} />
+          <Route path="/face-detection" element={<FaceDetection />} />
+          <Route path="/registered-faces" element={<RegisteredFaces />} />
+          <Route path="/forgot-password" element={<h1>Recuperar Contraseña</h1>} />
+          <Route path="/learn-more" element={<h1>Aprende Más</h1>} />
+        </Routes>
+      </div>
+    </ToastProvider>
   );
 }
 

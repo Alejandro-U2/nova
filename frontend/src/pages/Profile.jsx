@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import { useToast } from '../components/ToastNotification';
 import Notification from "../components/Notification";
 import FollowButton from "../components/FollowButton";
 import PublicationModal from "../components/PublicationModal";
@@ -7,6 +8,7 @@ import "../styles/profile.css";
 
 export default function Profile() {
   const { id } = useParams(); // ID del perfil en la URL
+  const toast = useToast();
   const [user, setUser] = useState(null); // usuario logueado
   const [profile, setProfile] = useState(null); // perfil que se está viendo
   const [publications, setPublications] = useState([]);
@@ -1085,6 +1087,8 @@ export default function Profile() {
       return;
     }
 
+    const toast = useToast();
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/publications/${publicationId}`, {
@@ -1107,21 +1111,26 @@ export default function Profile() {
           setSelectedPublication(null);
         }
 
+        toast.success("🗑️ Publicación eliminada exitosamente");
         setNotification({
           message: "✅ Publicación eliminada exitosamente",
           type: "success",
         });
       } else {
         const errorData = await response.json();
+        const errorMsg = errorData.message || "Error al eliminar la publicación";
+        toast.error(`❌ ${errorMsg}`);
         setNotification({
-          message: errorData.message || "❌ Error al eliminar la publicación",
+          message: `❌ ${errorMsg}`,
           type: "error",
         });
       }
     } catch (error) {
       console.error("Error al eliminar publicación:", error);
+      const errorMsg = "Error al eliminar la publicación";
+      toast.error(`❌ ${errorMsg}`);
       setNotification({
-        message: "❌ Error al eliminar la publicación",
+        message: `❌ ${errorMsg}`,
         type: "error",
       });
     }

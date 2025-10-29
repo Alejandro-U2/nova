@@ -342,28 +342,29 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
   width: 100%;
 }
 
-/* Botón visual idéntico */
+/* Botón visual idéntico - VERSIÓN COMPACTA */
 .action-btn {
   background: var(--gradient-primary);
   color: #fff;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 9999px; 
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   transition: var(--transition);
   box-shadow: var(--shadow-md);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
+  min-height: 32px;
 }
 
 /* Estilo para el botón cuando ya se está siguiendo al usuario */
@@ -561,8 +562,9 @@
   }
 
   .action-btn {
-    padding: 0.45rem 0.85rem;
-    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    min-height: 32px;
   }
 
   .search-tips {
@@ -677,8 +679,9 @@
   }
 
   .action-btn {
-    padding: 0.5rem 0.7rem;
-    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.72rem;
+    min-height: 32px;
   }
 
   .search-results {
@@ -776,8 +779,9 @@
   }
 
   .action-btn {
-    padding: 0.45rem 0.6rem;
-    font-size: 0.75rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.7rem;
+    min-height: 30px;
   }
 
   .results-container h3 {
@@ -851,3 +855,136 @@
 /* ==========================================================
    Fin de los estilos con paleta Plum Noir para la página de búsqueda
    ========================================================== */
+
+/* ===== RESPONSIVE MEJORADO PARA SEARCH ===== */
+@media (max-width: 1200px) {
+  .search-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .search-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .search-container {
+    padding-top: 70px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .users-results {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-container {
+    padding-top: 60px;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .search-content {
+    padding: 1rem;
+  }
+
+  .search-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .search-input-container {
+    flex-direction: column;
+  }
+
+  .search-btn {
+    width: 100%;
+  }
+
+  .filter-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .users-results {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-container {
+    padding-top: 50px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .search-content {
+    padding: 0.75rem;
+  }
+
+  .search-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .search-header p {
+    font-size: 0.9rem;
+  }
+
+  .search-input {
+    font-size: 0.9rem;
+    padding: 0.625rem;
+  }
+
+  .search-btn {
+    font-size: 0.9rem;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .users-results {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .user-card {
+    padding: 1rem;
+  }
+
+  .user-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.25rem;
+  }
+
+  .user-name {
+    font-size: 1rem;
+  }
+
+  .user-nickname {
+    font-size: 0.85rem;
+  }
+
+  .user-bio {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .search-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1rem;
+  }
+
+  .follow-btn-search {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.875rem;
+  }
+}

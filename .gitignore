@@ -34,3 +34,12 @@ SETUP_GOOGLE_RECAPTCHA.md
 *.njsproj
 *.sln
 *.sw?
+
+# Uploads (user generated content)
+backend/uploads/
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp

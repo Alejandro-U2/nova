@@ -16,7 +16,24 @@ const PublicationSchema = new mongoose.Schema({
     scaled: { type: String, required: true },
     bw: { type: String, required: false },
     sepia: { type: String, required: false },
-    cyanotype: { type: String, required: false }
+    cyanotype: { type: String, required: false },
+    faceData: [{
+      box: {
+        x: Number,
+        y: Number,
+        width: Number,
+        height: Number
+      },
+      taggedUser: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User"
+      },
+      confidence: Number,
+      detectedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   }],
   likes: [{
     user: {

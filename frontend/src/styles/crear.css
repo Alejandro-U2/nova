@@ -547,3 +547,152 @@
     transform: translateY(0);
   }
 }
+/* ===== RESPONSIVE MEJORADO PARA CREAR ===== */
+@media (max-width: 1200px) {
+  .crear-content {
+    padding: 90px 1.5rem 40px;
+    max-width: 95%;
+  }
+
+  .crear-form-container {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 992px) {
+  .crear-content {
+    padding: 80px 1rem 30px;
+  }
+
+  .crear-form-container {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .tips-section {
+    order: -1;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .crear-content {
+    padding: 70px 0.75rem 30px;
+  }
+
+  .crear-header h1 {
+    font-size: 2rem;
+  }
+
+  .crear-header p {
+    font-size: 1.1rem;
+  }
+
+  .create-post-form {
+    padding: 20px;
+  }
+
+  .form-section label {
+    font-size: 0.95rem;
+  }
+
+  .form-input {
+    font-size: 0.95rem;
+    padding: 0.625rem;
+  }
+
+  .upload-area {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .crear-content {
+    padding: 60px 0.5rem 20px;
+  }
+
+  .crear-header {
+    margin-bottom: 30px;
+  }
+
+  .crear-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .crear-header p {
+    font-size: 1rem;
+  }
+
+  .create-post-form {
+    padding: 15px;
+  }
+
+  .form-section {
+    margin-bottom: 20px;
+  }
+
+  .form-section label {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .form-input, .form-textarea {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+
+  .form-textarea {
+    min-height: 100px;
+  }
+
+  .upload-area {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .upload-area h3 {
+    font-size: 1rem;
+  }
+
+  .upload-area p {
+    font-size: 0.85rem;
+  }
+
+  .preview-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .submit-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .tips-section {
+    padding: 15px;
+  }
+
+  .tips-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .tips-section li {
+    font-size: 0.85rem;
+    padding: 8px 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .crear-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .preview-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 0.875rem 1rem;
+  }
+}

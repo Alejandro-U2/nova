@@ -755,3 +755,69 @@
     font-size: 1.5rem;
   }
 }
+/* =============================
+   Responsive Mejorado
+   ============================= */
+@media (max-width: 1200px) {
+  .profile-container {
+    max-width: 95%;
+    padding: 0 1.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .profile-container {
+    padding: 80px 1rem 1rem;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .publications-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .user-name {
+    font-size: 1.75rem;
+  }
+
+  .profile-stats {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .modal {
+    max-width: 95%;
+  }
+}
+
+@media (max-width: 360px) {
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .user-name {
+    font-size: 1.25rem;
+  }
+
+  .profile-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .profile-actions button {
+    width: 100%;
+  }
+}

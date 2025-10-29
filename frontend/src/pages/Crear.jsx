@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../components/ToastNotification';
 import '../styles/crear.css';
 
 export default function Crear() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [newPost, setNewPost] = useState({
     description: '',
     images: [] // Ahora es un array
@@ -42,16 +44,21 @@ export default function Crear() {
 
       if (response.ok) {
         setSuccess('¡Publicación creada exitosamente!');
+        toast.success('🎉 ¡Publicación creada exitosamente!');
         setNewPost({ description: '', images: [] });
         setTimeout(() => {
-          navigate('/home');
+          navigate('/inicio');
         }, 1500);
       } else {
         const errorData = await response.json();
-        setError(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        const errorMsg = errorData.message || `Error ${response.status}: ${response.statusText}`;
+        setError(errorMsg);
+        toast.error(`❌ ${errorMsg}`);
       }
     } catch (error) {
-      setError('Error al conectar con el servidor. Verifica que el backend esté funcionando.');
+      const errorMsg = 'Error al conectar con el servidor. Verifica que el backend esté funcionando.';
+      setError(errorMsg);
+      toast.error(`❌ ${errorMsg}`);
       console.error('Error al conectar con el servidor:', error);
     } finally {
       setIsPosting(false);
@@ -66,7 +73,9 @@ export default function Crear() {
     
     // Validar número máximo de imágenes
     if (newPost.images.length + files.length > 10) {
-      setError('Máximo 10 imágenes por publicación');
+      const errorMsg = 'Máximo 10 imágenes por publicación';
+      setError(errorMsg);
+      toast.warning(`⚠️ ${errorMsg}`);
       return;
     }
 
