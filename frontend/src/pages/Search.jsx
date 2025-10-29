@@ -11,7 +11,6 @@ export default function Search() {
   const [loadingFollow, setLoadingFollow] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
   const [userStats, setUserStats] = useState({}); // Estado para almacenar estadísticas de usuarios
-  const [userProfiles, setUserProfiles] = useState({}); // Estado para almacenar perfiles de usuarios
 
   // Obtener el ID del usuario actual
   useEffect(() => {
@@ -75,7 +74,7 @@ export default function Search() {
     const token = localStorage.getItem('token');
     const statsPromises = users.map(async (user) => {
       try {
-        // Cargar contadores
+        // Solo cargar contadores (esto siempre funciona)
         const countersResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/counters/${user._id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -83,16 +82,7 @@ export default function Search() {
           }
         });
         
-        // Cargar perfil para obtener avatar
-        const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/user/${user._id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
         let countersData = { followers: 0, following: 0 };
-        let profileData = null;
         
         if (countersResponse.ok) {
           const data = await countersResponse.json();
@@ -102,51 +92,39 @@ export default function Search() {
           };
         }
         
-        if (profileResponse.ok) {
-          const data = await profileResponse.json();
-          profileData = data.profile || null;
-        }
-        
         return {
           userId: user._id,
           followers: countersData.followers,
-          following: countersData.following,
-          profile: profileData
+          following: countersData.following
         };
       } catch (error) {
-        console.error(`Error al cargar datos para usuario ${user._id}:`, error);
+        console.error(`Error al cargar contadores para usuario ${user._id}:`, error);
+        return {
+          userId: user._id,
+          followers: 0,
+          following: 0
+        };
       }
-      return {
-        userId: user._id,
-        followers: 0,
-        following: 0,
-        profile: null
-      };
     });
     
     const statsArray = await Promise.all(statsPromises);
     const statsMap = {};
-    const profilesMap = {};
     
     statsArray.forEach(stat => {
       statsMap[stat.userId] = {
         followers: stat.followers,
         following: stat.following
       };
-      if (stat.profile) {
-        profilesMap[stat.userId] = stat.profile;
-      }
     });
     
     setUserStats(statsMap);
-    setUserProfiles(profilesMap);
   };
 
   // Cargar usuarios que ya estoy siguiendo
   const loadFollowingUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/follow/following', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/following`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -353,23 +331,11 @@ export default function Search() {
               <div className="users-results">
                 {searchResults.map(user => {
                   const stats = userStats[user._id] || { followers: 0, following: 0 };
-                  const profile = userProfiles[user._id];
                   
                   return (
                     <div key={user._id || user.id} className="user-card">
                       <div className="user-avatar">
-                        {profile && profile.avatar && profile.avatar !== 'default.png' ? (
-                          <img 
-                            src={profile.avatar} 
-                            alt={user.name}
-                            onError={(e) => {
-                              // Si falla la carga de la imagen, mostrar inicial
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <span style={{ display: profile && profile.avatar && profile.avatar !== 'default.png' ? 'none' : 'flex' }}>
+                        <span>
                           {(user.name || 'U').charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -377,7 +343,7 @@ export default function Search() {
                         <h4>{user.name} {user.lastname}</h4>
                         <p className="user-email">@{user.nickname}</p>
                         <p className="user-email">{user.email}</p>
-                        <p className="user-bio">{profile?.bio || user.bio || 'Sin biografía disponible'}</p>
+                        <p className="user-bio">{user.bio || 'Sin biografía disponible'}</p>
                         <div className="user-stats">
                           <span>{stats.followers} seguidores</span>
                           <span>{stats.following} siguiendo</span>

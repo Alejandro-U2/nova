@@ -6,8 +6,7 @@ export default function Crear() {
   const navigate = useNavigate();
   const [newPost, setNewPost] = useState({
     description: '',
-    image: '',
-    imageType: 'url'
+    images: [] // Ahora es un array
   });
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState('');
@@ -23,22 +22,27 @@ export default function Crear() {
       const token = localStorage.getItem('token');
       if (!token) {
         setError('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
+        setIsPosting(false);
         return;
       }
 
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/publications/create', {
+      const body = {
+        description: newPost.description,
+        images: newPost.images // Ahora enviamos array de imágenes
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/publications/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(newPost)
+        body: JSON.stringify(body)
       });
 
       if (response.ok) {
         setSuccess('¡Publicación creada exitosamente!');
-        setNewPost({ description: '', image: '', imageType: 'url' });
-        // Esperar un momento para mostrar el mensaje de éxito
+        setNewPost({ description: '', images: [] });
         setTimeout(() => {
           navigate('/home');
         }, 1500);
@@ -54,20 +58,48 @@ export default function Crear() {
     }
   };
 
-  // Función para manejar el archivo seleccionado
+  // Función para manejar múltiples archivos seleccionados
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length === 0) return;
+    
+    // Validar número máximo de imágenes
+    if (newPost.images.length + files.length > 10) {
+      setError('Máximo 10 imágenes por publicación');
+      return;
+    }
+
+    // Convertir cada archivo a base64
+    const promises = files.map(file => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises)
+      .then(base64Images => {
         setNewPost({
           ...newPost,
-          image: event.target.result,
-          imageType: 'base64'
+          images: [...newPost.images, ...base64Images]
         });
-      };
-      reader.readAsDataURL(file);
-    }
+        setError('');
+      })
+      .catch(error => {
+        setError('Error al cargar las imágenes');
+        console.error('Error:', error);
+      });
+  };
+
+  // Función para eliminar una imagen
+  const removeImage = (index) => {
+    setNewPost({
+      ...newPost,
+      images: newPost.images.filter((_, i) => i !== index)
+    });
   };
 
   return (
@@ -98,7 +130,7 @@ export default function Crear() {
               <textarea 
                 id="description"
                 placeholder="¿Qué quieres compartir con la comunidad?"
-                value={newPost.description || ''}
+                value={newPost.description}
                 onChange={(e) => setNewPost({...newPost, description: e.target.value})}
                 rows="4"
                 maxLength="500"
@@ -109,65 +141,48 @@ export default function Crear() {
             </div>
             
             <div className="form-section">
-              <label>Imagen</label>
+              <label>Imágenes ({newPost.images.length}/10)</label>
               <div className="image-upload-section">
-                <div className="upload-options">
-                  <label className="radio-option">
-                    <input
-                      type="radio"
-                      name="imageType"
-                      value="url"
-                      checked={newPost.imageType === 'url'}
-                      onChange={(e) => setNewPost({...newPost, imageType: e.target.value, image: ''})}
-                    />
-                    <span>URL de imagen</span>
+                <div className="file-input-section">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="file-input"
+                    id="file-upload"
+                    multiple
+                    disabled={newPost.images.length >= 10}
+                  />
+                  <label 
+                    htmlFor="file-upload" 
+                    className={`file-upload-label ${newPost.images.length >= 10 ? 'disabled' : ''}`}
+                  >
+                    {newPost.images.length === 0 
+                      ? '📸 Seleccionar imágenes' 
+                      : newPost.images.length >= 10 
+                        ? 'Máximo alcanzado (10)'
+                        : '➕ Agregar más imágenes'}
                   </label>
-                  <label className="radio-option">
-                    <input
-                      type="radio"
-                      name="imageType"
-                      value="file"
-                      checked={newPost.imageType === 'file'}
-                      onChange={(e) => setNewPost({...newPost, imageType: e.target.value, image: ''})}
-                    />
-                    <span>Subir archivo</span>
-                  </label>
+                  
+                  {/* Preview de imágenes */}
+                  {newPost.images.length > 0 && (
+                    <div className="images-preview-grid">
+                      {newPost.images.map((image, index) => (
+                        <div key={index} className="image-preview-item">
+                          <img src={image} alt={`Vista previa ${index + 1}`} />
+                          <button 
+                            className="remove-image-btn"
+                            onClick={() => removeImage(index)}
+                            type="button"
+                          >
+                            ✕
+                          </button>
+                          <span className="image-number">{index + 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                {newPost.imageType === 'url' ? (
-                  <div className="url-input-section">
-                    <input
-                      type="url"
-                      placeholder="https://ejemplo.com/imagen.jpg"
-                      value={newPost.image || ''}
-                      onChange={(e) => setNewPost({...newPost, image: e.target.value})}
-                      className="url-input"
-                    />
-                    {newPost.image && (
-                      <div className="image-preview">
-                        <img src={newPost.image} alt="Vista previa" onError={(e) => e.target.style.display = 'none'} />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="file-input-section">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="file-input"
-                      id="file-upload"
-                    />
-                    <label htmlFor="file-upload" className="file-upload-label">
-                      {newPost.image ? 'Cambiar imagen' : 'Seleccionar imagen'}
-                    </label>
-                    {newPost.image && (
-                      <div className="image-preview">
-                        <img src={newPost.image} alt="Vista previa" />
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -182,7 +197,7 @@ export default function Crear() {
               <button 
                 className="publish-btn"
                 onClick={createPublication}
-                disabled={!newPost.image || !newPost.description.trim() || isPosting}
+                disabled={newPost.images.length === 0 || !newPost.description.trim() || isPosting}
               >
                 {isPosting ? 'Publicando...' : 'Publicar'}
               </button>

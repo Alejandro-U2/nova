@@ -414,11 +414,6 @@ export default function Login() {
                         width="100%"
                       />
                     </div>
-                    
-                    <button type="button" onClick={handleFacebookLogin} className="social facebook">
-                      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="#ffffff"><path d="M22 12.07C22 6.61 17.52 2.13 12.06 2.13 6.61 2.13 2.13 6.61 2.13 12.07c0 4.89 3.55 8.94 8.19 9.75v-6.9H8.2v-2.85h2.12V9.03c0-2.08 1.23-3.22 3.12-3.22.9 0 1.84.16 1.84.16v2.03h-1.04c-1.02 0-1.34.64-1.34 1.29v1.56h2.28l-.36 2.85h-1.92v6.9c4.63-.81 8.19-4.86 8.19-9.75z"/></svg>
-                      <span>Iniciar sesión con Facebook</span>
-                    </button>
                   </div>
 
                   <p className="create-account">¿No tienes cuenta? <Link to="/register">Crea una cuenta aquí</Link></p>

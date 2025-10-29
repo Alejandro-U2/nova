@@ -17,6 +17,7 @@ dist-ssr
 .env.local
 .env.production
 backend/.env
+frontend/.env
 
 # Documentation with credentials (DO NOT COMMIT)
 CHECKLIST.md

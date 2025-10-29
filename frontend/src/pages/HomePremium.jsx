@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/homePremium.css';
+import PublicationModal from '../components/PublicationModal';
 const HomePremium = () => {
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,6 +13,9 @@ const HomePremium = () => {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [followingUsers, setFollowingUsers] = useState(new Set());
   const [totalUsers, setTotalUsers] = useState(0);
+  const [selectedPublication, setSelectedPublication] = useState(null);
+  const [currentPublicationIndex, setCurrentPublicationIndex] = useState(0);
+  const [publicationImageIndexes, setPublicationImageIndexes] = useState({}); // Índice de imagen para cada publicación
   const navigate = useNavigate();
 
   // Verificar autenticación
@@ -61,7 +65,7 @@ const HomePremium = () => {
         newPublications.forEach((pub, index) => {
           console.log(`Publicación ${index}:`, {
             id: pub._id,
-            image: pub.image,
+            image: pub.images?.scaled || pub.images?.original || 'No image',
             description: pub.description
           });
         });
@@ -95,7 +99,7 @@ const HomePremium = () => {
       const token = localStorage.getItem('token');
       
       // Primero cargar quiénes ya estoy siguiendo
-      const myFollowingResponse = await fetch('${import.meta.env.VITE_API_URL}/api/follow/following', {
+      const myFollowingResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/follow/following`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -141,7 +145,7 @@ const HomePremium = () => {
       }
       
       // Luego cargar todos los usuarios
-      const usersResponse = await fetch('${import.meta.env.VITE_API_URL}/api/users/all', {
+      const usersResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -325,6 +329,71 @@ const HomePremium = () => {
     return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  // Navegar entre imágenes de una publicación específica
+  const handleNextImage = (publicationId, totalImages) => {
+    setPublicationImageIndexes(prev => {
+      const currentIndex = prev[publicationId] || 0;
+      return {
+        ...prev,
+        [publicationId]: currentIndex < totalImages - 1 ? currentIndex + 1 : currentIndex
+      };
+    });
+  };
+
+  const handlePrevImage = (publicationId) => {
+    setPublicationImageIndexes(prev => {
+      const currentIndex = prev[publicationId] || 0;
+      return {
+        ...prev,
+        [publicationId]: currentIndex > 0 ? currentIndex - 1 : 0
+      };
+    });
+  };
+
+  const getCurrentImageIndex = (publicationId) => {
+    return publicationImageIndexes[publicationId] || 0;
+  };
+
+  // Abrir modal de publicación
+  const openPublicationModal = (publication, index) => {
+    setSelectedPublication(publication);
+    setCurrentPublicationIndex(index);
+  };
+
+  // Cerrar modal
+  const closeModal = () => {
+    setSelectedPublication(null);
+  };
+
+  // Navegar a la siguiente publicación
+  const handleNextPublication = () => {
+    if (currentPublicationIndex < publications.length - 1) {
+      const nextIndex = currentPublicationIndex + 1;
+      setCurrentPublicationIndex(nextIndex);
+      setSelectedPublication(publications[nextIndex]);
+    }
+  };
+
+  // Navegar a la publicación anterior
+  const handlePrevPublication = () => {
+    if (currentPublicationIndex > 0) {
+      const prevIndex = currentPublicationIndex - 1;
+      setCurrentPublicationIndex(prevIndex);
+      setSelectedPublication(publications[prevIndex]);
+    }
+  };
+
+  // Manejar cuando se agrega un comentario
+  const handleCommentAdded = (publicationId, newComment) => {
+    setPublications(prevPublications =>
+      prevPublications.map(pub =>
+        pub._id === publicationId
+          ? { ...pub, comments: [...(pub.comments || []), newComment] }
+          : pub
+      )
+    );
+  };
+
   if (loading) {
     return (
       <div className="home-page">
@@ -396,7 +465,7 @@ const HomePremium = () => {
               </div>
             ) : (
               <div className="posts">
-                {publications.map((pub) => (
+                {publications.map((pub, index) => (
                   <article key={pub._id} className="post">
                     {/* Header del post */}
                     <div className="post-header">
@@ -421,48 +490,101 @@ const HomePremium = () => {
                       <button className="more">⋯</button>
                     </div>
 
-                    {/* Imagen de la publicación */}
-                    {pub.image && (
-                      <div className="post-image">
-                        <img 
-                          src={pub.image}
-                          alt={pub.description || "Publicación"}
-                          onError={(e) => {
-                            console.error('Error cargando imagen:', pub.image);
-                            // Si falla cargar la imagen, mostrar placeholder
-                            e.target.style.display = 'none';
-                            const placeholder = e.target.parentNode.querySelector('.image-placeholder');
-                            if (placeholder) {
-                              placeholder.style.display = 'flex';
-                            }
-                          }}
-                          onLoad={() => {
-                            console.log('Imagen cargada exitosamente:', pub.image);
-                          }}
-                        />
-                        <div 
-                          className="image-placeholder"
-                          style={{
-                            display: 'none',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            height: '300px',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: '1.2rem',
-                            flexDirection: 'column',
-                            textAlign: 'center',
-                            padding: '2rem'
-                          }}
-                        >
-                          <div>📷</div>
-                          <div>Error al cargar imagen</div>
-                          <div style={{ fontSize: '0.8rem', marginTop: '1rem', opacity: 0.7 }}>
-                            URL: {pub.image}
+                    {/* Imagen de la publicación con carrusel */}
+                    {(() => {
+                      const images = pub.images;
+                      let imagesArray = [];
+                      
+                      // Nuevo formato: array de imágenes
+                      if (Array.isArray(images) && images.length > 0) {
+                        imagesArray = images;
+                      }
+                      // Formato antiguo: objeto único - convertir a array
+                      else if (images && typeof images === 'object' && !Array.isArray(images)) {
+                        imagesArray = [images];
+                      }
+                      
+                      if (imagesArray.length === 0) return null;
+                      
+                      const currentIndex = getCurrentImageIndex(pub._id);
+                      const currentImage = imagesArray[currentIndex];
+                      const imageUrl = currentImage?.scaled || currentImage?.original;
+                      
+                      return (
+                        <div className="post-image-carousel">
+                          <div className="carousel-container">
+                            <img 
+                              src={imageUrl}
+                              alt={pub.description || "Publicación"}
+                              onClick={() => openPublicationModal(pub, index)}
+                              style={{ cursor: 'pointer' }}
+                              onError={(e) => {
+                                console.error('Error cargando imagen:', imageUrl);
+                                e.target.style.display = 'none';
+                              }}
+                              onLoad={() => {
+                                console.log('Imagen cargada exitosamente:', imageUrl);
+                              }}
+                            />
+                            
+                            {/* Botones de navegación si hay múltiples imágenes */}
+                            {imagesArray.length > 1 && (
+                              <>
+                                {currentIndex > 0 && (
+                                  <button 
+                                    className="carousel-btn carousel-prev"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePrevImage(pub._id);
+                                    }}
+                                  >
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                  </button>
+                                )}
+                                
+                                {currentIndex < imagesArray.length - 1 && (
+                                  <button 
+                                    className="carousel-btn carousel-next"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleNextImage(pub._id, imagesArray.length);
+                                    }}
+                                  >
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                  </button>
+                                )}
+                                
+                                {/* Indicadores de puntos */}
+                                <div className="carousel-indicators">
+                                  {imagesArray.map((_, idx) => (
+                                    <button
+                                      key={idx}
+                                      className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPublicationImageIndexes(prev => ({
+                                          ...prev,
+                                          [pub._id]: idx
+                                        }));
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                
+                                {/* Contador de imágenes */}
+                                <div className="image-counter">
+                                  {currentIndex + 1} / {imagesArray.length}
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* Descripción */}
                     {pub.description && (
@@ -481,16 +603,7 @@ const HomePremium = () => {
                           <span className="icon">{pub.isLiked ? '❤️' : '🤍'}</span>
                           <span className="count">{pub.likes ? pub.likes.length : 0}</span>
                         </button>
-                        <button className="action-btn comment">
-                          <span className="icon">💬</span>
-                          <span className="count">{pub.comments ? pub.comments.length : 0}</span>
-                        </button>
-                        <button className="action-btn share">
-                          <span className="icon">📤</span>
-                          <span className="count">0</span>
-                        </button>
                       </div>
-                      <button className="save">🔖</button>
                     </div>
                   </article>
                 ))}
@@ -596,6 +709,21 @@ const HomePremium = () => {
           +
         </button>
       </div>
+
+      {/* Modal de publicación */}
+      {selectedPublication && (
+        <PublicationModal
+          publication={selectedPublication}
+          onClose={closeModal}
+          onNext={currentPublicationIndex < publications.length - 1 ? handleNextPublication : null}
+          onPrev={currentPublicationIndex > 0 ? handlePrevPublication : null}
+          hasNext={currentPublicationIndex < publications.length - 1}
+          hasPrev={currentPublicationIndex > 0}
+          userProfile={selectedPublication.userProfile}
+          isOwnProfile={false}
+          onCommentAdded={handleCommentAdded}
+        />
+      )}
     </div>
   );
 };

@@ -11,19 +11,13 @@ const PublicationSchema = new mongoose.Schema({
     default: "",
     maxlength: 2000
   },
-  image: {
-    type: String, // URL o base64 de la imagen original
-    required: true
-  },
-  thumbnail: {
-    type: String, // URL o base64 de la miniatura
-    default: ""
-  },
-  imageType: {
-    type: String,
-    enum: ['url', 'base64'],
-    default: 'url'
-  },
+  images: [{
+    original: { type: String, required: true },
+    scaled: { type: String, required: true },
+    bw: { type: String, required: false },
+    sepia: { type: String, required: false },
+    cyanotype: { type: String, required: false }
+  }],
   likes: [{
     user: {
       type: mongoose.Schema.ObjectId,

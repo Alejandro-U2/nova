@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import Notification from "../components/Notification";
 import FollowButton from "../components/FollowButton";
+import PublicationModal from "../components/PublicationModal";
 import "../styles/profile.css";
 
 export default function Profile() {
@@ -39,6 +40,11 @@ export default function Profile() {
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [followersData, setFollowersData] = useState([]);
   const [followingData, setFollowingData] = useState([]);
+
+  // Estados para modal de publicación
+  const [selectedPublication, setSelectedPublication] = useState(null);
+  const [showPublicationModal, setShowPublicationModal] = useState(false);
+  const [currentPublicationIndex, setCurrentPublicationIndex] = useState(0);
 
   // Cargar datos del usuario logueado
   useEffect(() => {
@@ -1024,6 +1030,103 @@ export default function Profile() {
     }
   };
 
+  // --- Funciones del modal de publicación ---
+  const handlePublicationClick = (publication, index) => {
+    setSelectedPublication(publication);
+    setCurrentPublicationIndex(index);
+    setShowPublicationModal(true);
+  };
+
+  const handleClosePublicationModal = () => {
+    setShowPublicationModal(false);
+    setSelectedPublication(null);
+  };
+
+  const handleNextPublication = () => {
+    if (currentPublicationIndex < publications.length - 1) {
+      const nextIndex = currentPublicationIndex + 1;
+      setCurrentPublicationIndex(nextIndex);
+      setSelectedPublication(publications[nextIndex]);
+    }
+  };
+
+  const handlePrevPublication = () => {
+    if (currentPublicationIndex > 0) {
+      const prevIndex = currentPublicationIndex - 1;
+      setCurrentPublicationIndex(prevIndex);
+      setSelectedPublication(publications[prevIndex]);
+    }
+  };
+
+  // --- Función para manejar cuando se agrega un comentario ---
+  const handleCommentAdded = (publicationId, newComment) => {
+    // Actualizar el array de publicaciones
+    setPublications(prevPublications => 
+      prevPublications.map(pub => {
+        if (pub._id === publicationId) {
+          // Agregar el nuevo comentario a la publicación
+          const updatedComments = [...(pub.comments || []), newComment];
+          return { ...pub, comments: updatedComments };
+        }
+        return pub;
+      })
+    );
+
+    // Actualizar la publicación seleccionada también
+    if (selectedPublication && selectedPublication._id === publicationId) {
+      const updatedComments = [...(selectedPublication.comments || []), newComment];
+      setSelectedPublication({ ...selectedPublication, comments: updatedComments });
+    }
+  };
+
+  // --- Función para eliminar publicación ---
+  const handleDeletePublication = async (publicationId) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta publicación?")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/publications/${publicationId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        // Actualizar la lista de publicaciones
+        setPublications(prevPublications => 
+          prevPublications.filter(pub => pub._id !== publicationId)
+        );
+        
+        // Cerrar el modal si está abierto
+        if (showPublicationModal) {
+          setShowPublicationModal(false);
+          setSelectedPublication(null);
+        }
+
+        setNotification({
+          message: "✅ Publicación eliminada exitosamente",
+          type: "success",
+        });
+      } else {
+        const errorData = await response.json();
+        setNotification({
+          message: errorData.message || "❌ Error al eliminar la publicación",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error al eliminar publicación:", error);
+      setNotification({
+        message: "❌ Error al eliminar la publicación",
+        type: "error",
+      });
+    }
+  };
+
   // --- Renderizado ---
   if (loading) {
     return (
@@ -1336,12 +1439,33 @@ export default function Profile() {
           <div className="publications-grid">
             {publications.length > 0 ? (
               publications.map((publication, index) => (
-                <div key={publication._id || index} className="publication-item">
+                <div 
+                  key={publication._id || index} 
+                  className="publication-item"
+                  onClick={() => handlePublicationClick(publication, index)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {isOwnProfile && (
+                    <button
+                      className="publication-delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evitar que se abra el modal
+                        handleDeletePublication(publication._id);
+                      }}
+                      title="Eliminar publicación"
+                    >
+                      ×
+                    </button>
+                  )}
                   <img
                     src={
-                      publication.image ||
-                      publication.imageUrl ||
-                      "https://via.placeholder.com/300x300?text=Sin+Imagen"
+                      (publication.images && Array.isArray(publication.images) && publication.images.length > 0)
+                        ? (publication.images[0].scaled || publication.images[0].original)
+                        : (publication.images && (publication.images.scaled || publication.images.original)) ||
+                          publication.image ||
+                          publication.imageUrl ||
+                          publication.thumbnail ||
+                          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect fill='%23000000' width='100%' height='100%'/><text x='50%' y='50%' fill='%23ffffff' font-size='18' text-anchor='middle' dominant-baseline='middle'>Sin imagen</text></svg>"
                     }
                     alt={publication.description || `Publicación ${index + 1}`}
                     className="publication-image"
@@ -1527,6 +1651,22 @@ export default function Profile() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* --- MODAL DE PUBLICACIÓN --- */}
+      {showPublicationModal && selectedPublication && (
+        <PublicationModal
+          publication={selectedPublication}
+          userProfile={profile}
+          onClose={handleClosePublicationModal}
+          onNext={handleNextPublication}
+          onPrev={handlePrevPublication}
+          hasNext={currentPublicationIndex < publications.length - 1}
+          hasPrev={currentPublicationIndex > 0}
+          onDelete={handleDeletePublication}
+          isOwnProfile={isOwnProfile}
+          onCommentAdded={handleCommentAdded}
+        />
       )}
     </div>
   );
