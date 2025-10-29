@@ -1,6 +1,13 @@
 #root {
   width: 100%;
   min-height: 100vh;
+  background-color: #FFFADA;
+}
+
+.app {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #FFFADA;
 }
 
 .logo {

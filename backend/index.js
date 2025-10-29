@@ -21,7 +21,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Middleware para logging
 app.use((req, res, next) => {
@@ -38,11 +38,23 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Middleware para debugging de archivos estáticos
+app.use('/uploads', (req, res, next) => {
+  console.log(`📂 Solicitando archivo: ${req.url}`);
+  console.log(`📍 Ruta completa: ${path.join(__dirname, 'uploads', req.url)}`);
+  next();
+});
+
+// Servir archivos estáticos (ANTES de las rutas API)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ----------Rutas
 app.use("/api/users", require("./rutas/user"));
 app.use("/api/profile", require("./rutas/profile"));
 app.use("/api/publications", require("./rutas/publication"));
 app.use("/api/follow", require("./rutas/follow"));
+app.use("/api/face-recognition", require("./rutas/faceRecognition"));
+app.use("/api/face-data", require("./rutas/faceData"));
 
 const startServer = async () => {
   try {

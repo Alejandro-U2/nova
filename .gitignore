@@ -12,13 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Environment variables
-.env
-.env.local
-.env.production
-backend/.env
-frontend/.env
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -29,3 +22,12 @@ frontend/.env
 *.njsproj
 *.sln
 *.sw?
+
+# Uploads (user generated content)
+backend/uploads/
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp

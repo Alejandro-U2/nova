@@ -210,10 +210,6 @@ export default function Register() {
 											<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="#ffffff"><path d="M21.8 10.1h-9.8v3.8h5.6c-.6 2-2.6 3.9-5.6 3.9-3.2 0-5.8-2.7-5.8-6s2.6-6 5.8-6c1.9 0 3.1.8 3.8 1.5l2.7-2.6C17 3.1 15 2.2 12 2.2 6.6 2.2 2.2 6.7 2.2 12s4.4 9.8 9.8 9.8c5.7 0 9.8-4 9.8-9.8 0-.7-.1-1.4-.2-1.9z"/></svg>
 											<span>Iniciar sesión con Google</span>
 										</button>
-										<button type="button" onClick={() => { if (!FACEBOOK_APP_ID) setMessage({ text: 'Facebook no configurado', color: 'crimson' }); else window.FB && window.FB.login && window.FB.login(); }} className="social facebook">
-											<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="#ffffff"><path d="M22 12.07C22 6.61 17.52 2.13 12.06 2.13 6.61 2.13 2.13 6.61 2.13 12.07c0 4.89 3.55 8.94 8.19 9.75v-6.9H8.2v-2.85h2.12V9.03c0-2.08 1.23-3.22 3.12-3.22.9 0 1.84.16 1.84.16v2.03h-1.04c-1.02 0-1.34.64-1.34 1.29v1.56h2.28l-.36 2.85h-1.92v6.9c4.63-.81 8.19-4.86 8.19-9.75z"/></svg>
-											<span>Iniciar sesión con Facebook</span>
-										</button>
 									</div>
 
 									{/* top alert used instead of bottom duplicate */}

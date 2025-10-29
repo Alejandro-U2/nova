@@ -3,6 +3,10 @@ const moment = require("moment");
 const claveSecreta = process.env.JWT_SECRET || "mi_secreto_super_seguro";
 const bcrypt = require("bcryptjs"); 
 const jwt = require("jwt-simple");
+const { OAuth2Client } = require('google-auth-library');
+const axios = require('axios');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
@@ -77,20 +81,71 @@ const registerUser = async (req, res) => {
 // Login de usuario con jwt-simple
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, captchaValue } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Correo y contraseña son obligatorios" });
+      return res.status(400).json({ 
+        status: 'error',
+        message: "Correo y contraseña son obligatorios" 
+      });
+    }
+
+    // Verificar reCAPTCHA v3 si está configurado
+    const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY;
+    if (recaptchaSecret && captchaValue) {
+      try {
+        const verifyUrl = `https://www.google.com/recaptcha/api/siteverify`;
+        const recaptchaResponse = await axios.post(verifyUrl, null, {
+          params: {
+            secret: recaptchaSecret,
+            response: captchaValue
+          }
+        });
+        
+        console.log('📊 reCAPTCHA response:', recaptchaResponse.data);
+        
+        if (!recaptchaResponse.data.success) {
+          return res.status(400).json({ 
+            status: 'error',
+            message: "Verificación de reCAPTCHA fallida" 
+          });
+        }
+
+        // Para reCAPTCHA v3, verificar el score (puntaje)
+        // Score va de 0.0 (bot) a 1.0 (humano)
+        const score = recaptchaResponse.data.score || 0;
+        if (score < 0.5) {
+          console.log(`⚠️ reCAPTCHA score bajo: ${score}`);
+          return res.status(400).json({ 
+            status: 'error',
+            message: "Verificación de reCAPTCHA fallida. Por favor, intenta de nuevo." 
+          });
+        }
+
+        console.log(`✅ reCAPTCHA verificado con score: ${score}`);
+      } catch (error) {
+        console.error('❌ Error verificando reCAPTCHA:', error);
+        return res.status(500).json({ 
+          status: 'error',
+          message: "Error al verificar reCAPTCHA" 
+        });
+      }
     }
 
     const user = await User.findOne({ $or: [{ email }, { nickname: email }] });
     if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(404).json({ 
+        status: 'error',
+        message: "Usuario no encontrado" 
+      });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Contraseña incorrecta" });
+      return res.status(401).json({ 
+        status: 'error',
+        message: "Contraseña incorrecta" 
+      });
     }
 
     // Crear payload manual
@@ -105,6 +160,7 @@ const loginUser = async (req, res) => {
     const token = jwt.encode(payload, claveSecreta);
 
     return res.status(200).json({
+      status: 'success',
       message: "✅ Inicio de sesión exitoso",
       token,
       user: {
@@ -117,7 +173,11 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: "Error al iniciar sesión", error: error.message });
+    return res.status(500).json({ 
+      status: 'error',
+      message: "Error al iniciar sesión", 
+      error: error.message 
+    });
   }
 };
 // Obtener usuario por ID
@@ -206,6 +266,127 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// ============================================================
+// 🔹 LOGIN CON GOOGLE
+// ============================================================
+const googleLogin = async (req, res) => {
+  try {
+    const { credential, email, name, image, sub } = req.body;
+
+    // Verificar el token de Google
+    let googleEmail, googleName, googleImage, googleSub;
+
+    if (credential) {
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        googleEmail = payload.email;
+        googleName = payload.name;
+        googleImage = payload.picture;
+        googleSub = payload.sub;
+      } catch (error) {
+        console.error('❌ Error verificando token de Google:', error);
+        return res.status(401).json({ 
+          status: 'error',
+          message: 'Token de Google inválido' 
+        });
+      }
+    } else {
+      // Si no hay credential, usar los datos directos (ya verificados en frontend)
+      googleEmail = email;
+      googleName = name;
+      googleImage = image;
+      googleSub = sub;
+    }
+
+    if (!googleEmail) {
+      return res.status(400).json({ 
+        status: 'error',
+        message: 'Email de Google requerido' 
+      });
+    }
+
+    // Buscar usuario existente por email o googleId
+    let user = await User.findOne({ 
+      $or: [
+        { email: googleEmail },
+        { googleId: googleSub }
+      ]
+    });
+
+    if (user) {
+      // Usuario ya existe, actualizar googleId si no lo tiene
+      if (!user.googleId && googleSub) {
+        user.googleId = googleSub;
+        await user.save();
+      }
+    } else {
+      // Crear nuevo usuario
+      const nameParts = googleName.split(' ');
+      const firstName = nameParts[0] || 'Usuario';
+      const lastName = nameParts.slice(1).join(' ') || 'Google';
+      
+      // Generar nickname único basado en el email
+      let baseNickname = googleEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      let nickname = baseNickname;
+      let counter = 1;
+      
+      // Asegurar que el nickname sea único
+      while (await User.findOne({ nickname })) {
+        nickname = `${baseNickname}${counter}`;
+        counter++;
+      }
+
+      user = new User({
+        name: firstName,
+        lastname: lastName,
+        nickname,
+        email: googleEmail,
+        password: await bcrypt.hash(Math.random().toString(36), 10), // Password aleatorio
+        googleId: googleSub,
+        image: googleImage,
+      });
+
+      await user.save();
+    }
+
+    // Crear payload y token
+    const payload = {
+      id: user._id,
+      email: user.email,
+      iat: moment().unix(),
+      exp: moment().add(7, "days").unix() // 7 días para login social
+    };
+
+    const token = jwt.encode(payload, claveSecreta);
+
+    return res.status(200).json({
+      status: 'success',
+      message: '✅ Inicio de sesión con Google exitoso',
+      token,
+      user: {
+        _id: user._id,
+        id: user._id,
+        name: user.name,
+        lastname: user.lastname,
+        nickname: user.nickname,
+        email: user.email,
+        image: user.image,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Error en login con Google:', error);
+    return res.status(500).json({ 
+      status: 'error',
+      message: 'Error al procesar login con Google', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   pruebaUser,
   registerUser,
@@ -213,4 +394,5 @@ module.exports = {
   getUser,
   searchUsers,
   getAllUsers,
+  googleLogin,
 };

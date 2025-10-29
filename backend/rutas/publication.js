@@ -24,4 +24,7 @@ router.post('/:publicationId/like', auth, publicationController.toggleLike);
 // Agregar comentario a una publicación (protegida)
 router.post('/:publicationId/comment', auth, publicationController.addComment);
 
+// Eliminar publicación (protegida)
+router.delete('/:id', auth, publicationController.deletePublication);
+
 module.exports = router;
