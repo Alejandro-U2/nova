@@ -6,50 +6,74 @@ const ImageService = require("../services/imageService");
 // Crear nueva publicación
 const createPublication = async (req, res) => {
   try {
-    console.log('Iniciando creación de publicación...');
-    console.log('Datos recibidos:', req.body);
-    console.log('Usuario:', req.user);
-
     const userId = req.user.id;
-    const { description, image, imageType = 'url' } = req.body;
+    const { description, images } = req.body;
 
-    if (!image) {
+    // Validar que haya al menos una imagen y máximo 10
+    if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({
-        message: "❌ La imagen es obligatoria"
+        message: "❌ Debes subir al menos una imagen"
       });
     }
 
-    console.log('Creando publicación en la base de datos...');
+    if (images.length > 10) {
+      return res.status(400).json({
+        message: "❌ Máximo 10 imágenes por publicación"
+      });
+    }
 
-    // Crear la publicación sin procesamiento de imagen por ahora
+    // Validar que todas las imágenes sean base64 válidas
+    for (const image of images) {
+      if (!ImageService.isValidBase64Image(image)) {
+        return res.status(400).json({
+          message: "❌ Todas las imágenes deben estar en formato base64 válido"
+        });
+      }
+    }
+
+    // Procesar todas las imágenes
+    const processedImages = await Promise.all(
+      images.map(async (image) => {
+        const [original, scaled, bw, sepia, cyanotype] = await Promise.all([
+          ImageService.optimizeImage(image),
+          ImageService.generateScaled(image),
+          ImageService.generateBlackAndWhite(image),
+          ImageService.generateSepia(image),
+          ImageService.generateCyanotype(image)
+        ]);
+        
+        return {
+          original,
+          scaled,
+          bw,
+          sepia,
+          cyanotype
+        };
+      })
+    );
+
+    // Crear la publicación con las imágenes procesadas
     const publication = new Publication({
       user: userId,
       description: description || "",
-      image: image,
-      thumbnail: image, // Usar la misma imagen como thumbnail temporalmente
-      imageType: imageType
+      images: processedImages
     });
 
-    console.log('Guardando publicación...');
     await publication.save();
-    console.log('Publicación guardada exitosamente');
 
     // Obtener la publicación con datos del usuario
-    console.log('Obteniendo datos del usuario...');
     const populatedPublication = await Publication.findById(publication._id)
       .populate('user', 'name lastname nickname email');
 
-    console.log('Publicación creada exitosamente');
     return res.status(201).json({
-      message: "✅ Publicación creada exitosamente",
+      message: `✅ Publicación creada con ${processedImages.length} imagen(es)`,
       publication: populatedPublication
     });
   } catch (error) {
     console.error('Error detallado al crear publicación:', error);
     return res.status(500).json({
       message: "❌ Error al crear la publicación",
-      error: error.message,
-      stack: error.stack
+      error: error.message
     });
   }
 };
@@ -79,9 +103,7 @@ const getFeedPublications = async (req, res) => {
           return {
             _id: pub._id,
             description: pub.description,
-            image: pub.image,
-            thumbnail: pub.thumbnail,
-            imageType: pub.imageType,
+            images: pub.images,
             created_at: pub.created_at,
             likes: pub.likes || [],
             comments: pub.comments || [],
@@ -93,9 +115,7 @@ const getFeedPublications = async (req, res) => {
           return {
             _id: pub._id,
             description: pub.description,
-            image: pub.image,
-            thumbnail: pub.thumbnail,
-            imageType: pub.imageType,
+            images: pub.images || {},
             created_at: pub.created_at,
             likes: pub.likes || [],
             comments: pub.comments || [],
@@ -148,7 +168,36 @@ const getUserPublications = async (req, res) => {
     })
       .sort({ created_at: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .populate({
+        path: 'comments.user',
+        select: 'name lastname nickname'
+      });
+
+    // Enriquecer comentarios con avatares de los perfiles
+    const enrichedPublications = await Promise.all(
+      publications.map(async (pub) => {
+        const pubObj = pub.toObject();
+        if (pubObj.comments && pubObj.comments.length > 0) {
+          pubObj.comments = await Promise.all(
+            pubObj.comments.map(async (comment) => {
+              if (comment.user && comment.user._id) {
+                const profile = await Profile.findOne({ user: comment.user._id }).select('avatar');
+                return {
+                  ...comment,
+                  user: {
+                    ...comment.user,
+                    avatar: profile?.avatar || null
+                  }
+                };
+              }
+              return comment;
+            })
+          );
+        }
+        return pubObj;
+      })
+    );
 
     const total = await Publication.countDocuments({ 
       user: userId, 
@@ -157,7 +206,7 @@ const getUserPublications = async (req, res) => {
 
     return res.status(200).json({
       message: "✅ Publicaciones del usuario obtenidas exitosamente",
-      publications,
+      publications: enrichedPublications,
       pagination: {
         current: parseInt(page),
         pages: Math.ceil(total / limit),
@@ -283,11 +332,16 @@ const addComment = async (req, res) => {
 
     await publication.save();
 
-    // Obtener el comentario recién agregado con datos del usuario (simplificado)
+    // Obtener el comentario recién agregado con datos del usuario Y del perfil
     const user = await User.findById(userId).select('name lastname nickname');
+    const profile = await Profile.findOne({ user: userId }).select('avatar');
+    
     const newComment = {
       _id: publication.comments[publication.comments.length - 1]._id,
-      user: user,
+      user: {
+        ...user.toObject(),
+        avatar: profile?.avatar || null
+      },
       text: text.trim(),
       created_at: publication.comments[publication.comments.length - 1].created_at
     };
@@ -314,6 +368,45 @@ const testPublication = (req, res) => {
   });
 };
 
+// Eliminar publicación
+const deletePublication = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    // Buscar la publicación
+    const publication = await Publication.findById(id);
+
+    if (!publication) {
+      return res.status(404).json({
+        message: "❌ Publicación no encontrada"
+      });
+    }
+
+    // Verificar que el usuario sea el dueño de la publicación
+    if (publication.user.toString() !== userId) {
+      return res.status(403).json({
+        message: "❌ No tienes permiso para eliminar esta publicación"
+      });
+    }
+
+    // Eliminar la publicación
+    await Publication.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      message: "✅ Publicación eliminada exitosamente",
+      publicationId: id
+    });
+
+  } catch (error) {
+    console.error("❌ Error al eliminar publicación:", error);
+    return res.status(500).json({
+      message: "❌ Error al eliminar la publicación",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   testPublication,
   createPublication,
@@ -321,5 +414,6 @@ module.exports = {
   getUserPublications,
   getMyPublications,
   toggleLike,
-  addComment
+  addComment,
+  deletePublication
 };

@@ -50,9 +50,16 @@ const getProfileById = async (req, res) => {
     let profile = await Profile.findOne({ user: userId }).populate('user', 'name lastname nickname email created_at');
     
     if (!profile) {
-      return res.status(404).json({
-        message: "❌ Perfil no encontrado"
+      // Si no existe perfil, crearlo automáticamente con datos básicos del usuario
+      profile = new Profile({
+        user: userId,
+        name: `${user.name} ${user.lastname}`,
+        bio: "",
+        coverPhoto: "",
+        avatar: ""
       });
+      await profile.save();
+      await profile.populate('user', 'name lastname nickname email created_at');
     }
 
     return res.status(200).json({

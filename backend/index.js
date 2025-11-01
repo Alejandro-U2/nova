@@ -7,48 +7,55 @@ const PORT = process.env.PORT || 5000;
 
 require("dotenv").config({ path: path.join(__dirname, '.env') });
 
-// === CORS ===
+// Configuración CORS mejorada
 const corsOptions = {
   origin: [
+    'http://localhost:3000',
     'http://localhost:5173',
-    'http://18.223.235.125:5173'
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+    'http://18.220.112.250:5000'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
+  optionsSuccessStatus: 200
 };
-app.use(cors(corsOptions));
-app.options(/^\/.*/, cors(corsOptions));
-app.use(express.json());
 
-// === Logging ===
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '50mb' }));
+
+// Middleware para logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// === Health check ===
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
+  res.status(200).json({ 
+    status: 'OK', 
     timestamp: new Date().toISOString(),
-    port: PORT
+    port: PORT 
   });
 });
 
-// === Rutas ===
+// Middleware para debugging de archivos estáticos
+app.use('/uploads', (req, res, next) => {
+  console.log(`📂 Solicitando archivo: ${req.url}`);
+  console.log(`📍 Ruta completa: ${path.join(__dirname, 'uploads', req.url)}`);
+  next();
+});
+
+// Servir archivos estáticos (ANTES de las rutas API)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ----------Rutas
 app.use("/api/users", require("./rutas/user"));
 app.use("/api/profile", require("./rutas/profile"));
 app.use("/api/publications", require("./rutas/publication"));
 app.use("/api/follow", require("./rutas/follow"));
+app.use("/api/face-recognition", require("./rutas/faceRecognition"));
+app.use("/api/face-data", require("./rutas/faceData"));
 
-// === Manejo de errores ===
-app.use((err, req, res, next) => {
-  console.error("Error interno:", err);
-  res.status(500).json({ message: "Error interno del servidor", error: err.message });
-});
-
-// === Inicialización ===
 const startServer = async () => {
   try {
     await connectDB();

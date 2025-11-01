@@ -84,6 +84,19 @@ export default function NavbarNew() {
           </li>
           <li>
             <Link
+              to="/face-detection"
+              className={location.pathname === "/face-detection" ? "active" : ""}
+            >
+              <svg className="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 14c-4.42 0-8 2.69-8 6v2h16v-2c0-3.31-3.58-6-8-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="18" cy="6" r="2" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              <span className="nav-text">Rostros</span>
+            </Link>
+          </li>
+          <li>
+            <Link
               to="/profile"
               className={location.pathname === "/profile" ? "active" : ""}
             >

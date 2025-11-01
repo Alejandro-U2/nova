@@ -448,6 +448,31 @@ form button:hover {
 
 /* Scoped hover colors for register page */
 .register-page .button .social.google:hover { background: linear-gradient(90deg,#5b5be6aa,#8a44ff33); }
+
+/* Google OAuth Button Wrapper */
+.social-google-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.social-google-wrapper > div {
+  width: 100% !important;
+}
+
+.social-google-wrapper > div > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* reCAPTCHA container styling */
+.flex.justify-center.my-4 {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
 .register-page .button .social.facebook:hover { background: linear-gradient(90deg,#5b5be6aa,#8a44ff33); }
 
 /* Enlaces */

@@ -146,6 +146,126 @@ class ImageService {
       throw new Error('No se pudo obtener información de la imagen');
     }
   }
+
+  /**
+   * Convierte una imagen a blanco y negro (escala de grises)
+   * @param {Buffer|string} input - Buffer de la imagen o base64 string
+   * @returns {Promise<string>} - Base64 de la imagen en blanco y negro
+   */
+  static async generateBlackAndWhite(input) {
+    try {
+      let imageBuffer;
+      if (typeof input === 'string' && input.startsWith('data:')) {
+        const base64Data = input.split(',')[1];
+        imageBuffer = Buffer.from(base64Data, 'base64');
+      } else if (Buffer.isBuffer(input)) {
+        imageBuffer = input;
+      } else {
+        throw new Error('Formato de imagen no soportado');
+      }
+
+      const bwBuffer = await sharp(imageBuffer).grayscale().jpeg({ quality: 85 }).toBuffer();
+      return `data:image/jpeg;base64,${bwBuffer.toString('base64')}`;
+    } catch (error) {
+      console.error('Error al generar imagen en blanco y negro:', error);
+      throw new Error('No se pudo generar la imagen en blanco y negro');
+    }
+  }
+
+  /**
+   * Aplica un filtro sepia a una imagen
+   * @param {Buffer|string} input - Buffer de la imagen o base64 string
+   * @returns {Promise<string>} - Base64 de la imagen con filtro sepia
+   */
+  static async generateSepia(input) {
+    try {
+      let imageBuffer;
+      if (typeof input === 'string' && input.startsWith('data:')) {
+        const base64Data = input.split(',')[1];
+        imageBuffer = Buffer.from(base64Data, 'base64');
+      } else if (Buffer.isBuffer(input)) {
+        imageBuffer = input;
+      } else {
+        throw new Error('Formato de imagen no soportado');
+      }
+
+      const sepiaBuffer = await sharp(imageBuffer)
+        .tint({ r: 112, g: 66, b: 20 }) // Tonalidad sepia
+        .jpeg({ quality: 85 })
+        .toBuffer();
+      return `data:image/jpeg;base64,${sepiaBuffer.toString('base64')}`;
+    } catch (error) {
+      console.error('Error al generar imagen sepia:', error);
+      throw new Error('No se pudo generar la imagen sepia');
+    }
+  }
+
+  /**
+   * Aplica un filtro cyanotype (cianotipo) a una imagen
+   * @param {Buffer|string} input - Buffer de la imagen o base64 string
+   * @returns {Promise<string>} - Base64 de la imagen con filtro cyanotype
+   */
+  static async generateCyanotype(input) {
+    try {
+      let imageBuffer;
+      if (typeof input === 'string' && input.startsWith('data:')) {
+        const base64Data = input.split(',')[1];
+        imageBuffer = Buffer.from(base64Data, 'base64');
+      } else if (Buffer.isBuffer(input)) {
+        imageBuffer = input;
+      } else {
+        throw new Error('Formato de imagen no soportado');
+      }
+
+      // Crear efecto cyanotype real con matriz de color personalizada
+      const cyanotypeBuffer = await sharp(imageBuffer)
+        .grayscale()
+        .linear(1.3, -(128 * 0.3)) // Aumentar contraste
+        .normalise() // Normalizar para mejorar el rango tonal
+        .recomb([
+          [0.2, 0.2, 0.2],  // Rojo - muy reducido
+          [0.5, 0.5, 0.5],  // Verde - medio
+          [1.0, 1.0, 1.0]   // Azul - máximo
+        ])
+        .modulate({
+          brightness: 0.85  // Reducir brillo para efecto más oscuro y vintage
+        })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+      return `data:image/jpeg;base64,${cyanotypeBuffer.toString('base64')}`;
+    } catch (error) {
+      console.error('Error al generar imagen cyanotype:', error);
+      throw new Error('No se pudo generar la imagen cyanotype');
+    }
+  }
+
+  /**
+   * Genera una versión reducida de la imagen
+   * @param {Buffer|string} input - Buffer de la imagen o base64 string
+   * @returns {Promise<string>} - Base64 de la imagen reducida
+   */
+  static async generateScaled(input) {
+    try {
+      let imageBuffer;
+      if (typeof input === 'string' && input.startsWith('data:')) {
+        const base64Data = input.split(',')[1];
+        imageBuffer = Buffer.from(base64Data, 'base64');
+      } else if (Buffer.isBuffer(input)) {
+        imageBuffer = input;
+      } else {
+        throw new Error('Formato de imagen no soportado');
+      }
+
+      const scaledBuffer = await sharp(imageBuffer)
+        .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      return `data:image/jpeg;base64,${scaledBuffer.toString('base64')}`;
+    } catch (error) {
+      console.error('Error al generar imagen reducida:', error);
+      throw new Error('No se pudo generar la imagen reducida');
+    }
+  }
 }
 
 module.exports = ImageService;
