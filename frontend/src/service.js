@@ -1,5 +1,5 @@
 import axios from "axios";
-
+console.log("🌐 VITE_API_URL:", import.meta.env.VITE_API_URL);
 // Crear una instancia de Axios con configuración base
 const API = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api`, // URL de tu backend usando variable de entorno
